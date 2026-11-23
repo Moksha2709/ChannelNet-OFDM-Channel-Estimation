@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Large dataset files (reproducible with: python ChannelNet_Assignment/data/dataset_generator.py)
+ChannelNet_Assignment/data/train/*.npz
+ChannelNet_Assignment/data/validation/*.npz
+ChannelNet_Assignment/data/test/*.npz
+*.npz
+
+# Temporary / OS files
+.DS_Store
+Thumbs.db
+__MACOSX/
+*.log
+temp_*.pth
+temp_*.npz
+vienna_out_*.mat
+
+# Original archive
+5GLLSimulator.zip

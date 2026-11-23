@@ -1,0 +1,136 @@
+--- PAGE 1 ---
+COM 837 – MACHINE LEARNING FOR WIRELESS COMMUNICATION 
+ASSIGNMENT-3 
+Total: 100 Marks     |     Last date of submission: 23-11-2026 
+Objective: 
+Implement and analyse the ChannelNet framework for OFDM channel estimation. Represent the channel 
+time–frequency response as a two-dimensional image and reconstruct the complete channel response from 
+noisy, sparse pilot observations using a two-stage deep-learning pipeline: image super-resolution (SR) 
+followed by image restoration (IR)/denoising. 
+Reference Paper: 
+Mehran Soltani, Vahid Pourahmadi, Ali Mirzaei, and Hamid Sheikhzadeh, “Deep Learning-Based Channel 
+Estimation,” arXiv:1810.05893v4, 19 February 2019. 
+ 
+System and Simulation Setup: 
+Parameter 
+Required specification 
+System configuration 
+SISO-OFDM (one transmit antenna and one receive antenna). 
+Time–frequency grid 
+72 subcarriers × 14 OFDM time slots, following the LTE-like setup in the 
+paper. 
+Pilot arrangement 
+Lattice-type pilot arrangement. Use 48 pilots per frame for the main 
+comparison and evaluate at least two additional pilot densities. 
+Channel models 
+Vehicular-A (VehA) and SUI5. Use the Vienna LTE simulator available in the 
+zip file.  
+Channel representation 
+Represent the complex channel using two normalized 2-D images: real and 
+imaginary parts. 
+Learning input and target 
+Input: sparse/noisy LS channel estimates at pilot locations.  
+Target: complete ground-truth channel grid. 
+Evaluation metric 
+Mean-square error (MSE) between the estimated and ground-truth channel 
+responses. 
+ 
+PART A: ChannelNet Implementation and Performance Evaluation – 100 Marks 
+ 
+Task 
+No. 
+Details of the Task 
+Expected Outcome 
+Marks 
+1 
+OFDM and Channel-Data Generation 
+Generate SISO-OFDM datasets with lattice-type pilots for 
+VehA and SUI5 channel models. Prepare LS-based input 
+and ground-truth channel data. 
+Dataset-generation code, 
+pilot pattern and channel 
+visualizations. 
+15 
+2 
+Conventional Channel Estimation 
+Channel estimates and MSE 
+15 
+
+--- PAGE 2 ---
+Task 
+No. 
+Details of the Task 
+Expected Outcome 
+Marks 
+Implement LS with 2-D interpolation and MMSE-based 
+channel estimation. 
+performance comparison of 
+the implemented methods. 
+3 
+ChannelNet – Super-Resolution Stage 
+Implement and train the SR network to reconstruct the full 
+channel response from sparse pilot observations. 
+Trained SR model, loss curves  
+20 
+4 
+ChannelNet – Image Restoration Stage 
+Implement the DnCNN-based denoising stage and 
+integrate it with the SR network. 
+Complete ChannelNet model  
+20 
+5 
+Training and Reproducibility 
+Follow the paper's training procedure, including data 
+splitting and SNR-specific training at 12 dB and 22 dB. 
+Document the training settings. 
+Reproducible training/testing 
+workflow, saved model 
+weights and training curves. 
+10 
+6 
+Performance Evaluation and Discussion 
+Compare ChannelNet with conventional methods across 
+SNR values and pilot densities. Evaluate both channel 
+models and discuss SNR-specific training and 
+generalization limitations. 
+Fig.3, 4 and 5 
+10 
+7 
+Report and Code Quality 
+Submit a concise technical report and well-organized, 
+documented source code. 
+Complete report, executable 
+code and README file. 
+10 
+MANDATORY PLOTS  
+1. Ground-truth real-part and imaginary-part channel time–frequency images. Fig. 2 (As in paper) 
+2. Training and validation loss versus epoch/iteration for both SR and denoising stages. 
+3. Channel-estimation MSE versus SNR – Fig.3, 4 and 5 (As in paper) 
+4. Separate MSE-versus-SNR comparisons for VehA and SUI5. (Deep High SNR Case) 
+5. MSE versus number of pilots at a fixed SNR, including 48 pilots and at least two other pilot counts. 
+CODE SUBMISSION GUIDELINES: 
+1. Modular Code: Organize the code into separate modules for OFDM, channel generation, channel 
+estimation, DNN training and evaluation. 
+2. Proper Comments: Include clear comments explaining key equations, network architecture and 
+implementation steps. 
+3. Reproducibility: Set and record random seeds to ensure consistent and reproducible results. 
+4. Separate Training and Testing: Maintain separate scripts for model training and testing. Save and reuse 
+trained model checkpoints. 
+5. Report Documentation: Present the mandated results with performance inferences and limitations in a 
+PDF file format.  
+ 
+
+--- PAGE 3 ---
+SUBMISSION REQUIREMENTS: 
+ Source code and README file containing environment setup and exact execution steps. 
+ Separate training and testing scripts, configuration files and saved model checkpoints. 
+ All generated plots organized in a clearly named results folder. 
+ Technical report (recommended 5–7 pages) covering methodology, results, inference and limitations. 
+IMPORTANT NOTE: 
+Students are required to discuss: 
+1. The limitations of training networks at specific SNR values and their impact on model generalization 
+across different SNR conditions. 
+2. Potential approaches to overcome these limitations and improve the model’s generalization across a 
+wider range of SNR values with relevant reference papers.  
+3. There will be a viva for each assignment, individually.  
+ 

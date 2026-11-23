@@ -1,0 +1,1912 @@
+--- PAGE 1 ---
+RESEARCH
+Open Access
+The Vienna LTE simulators - Enabling
+reproducibility in wireless communications
+research
+Christian Mehlführer*, Josep Colom Ikuno, Michal Šimko, Stefan Schwarz, Martin Wrulich and Markus Rupp
+Abstract
+In this article, we introduce MATLAB-based link and system level simulation environments for UMTS Long-Term
+Evolution (LTE). The source codes of both simulators are available under an academic non-commercial use license,
+allowing researchers full access to standard-compliant simulation environments. Owing to the open source
+availability, the simulators enable reproducible research in wireless communications and comparison of novel
+algorithms. In this study, we explain how link and system level simulations are connected and show how the link
+level simulator serves as a reference to design the system level simulator. We compare the accuracy of the PHY
+modeling at system level by means of simulations performed both with bit-accurate link level simulations and
+PHY-model-based system level simulations. We highlight some of the currently most interesting research questions
+for LTE, and explain by some research examples how our simulators can be applied.
+Keywords: LTE, MIMO, link level, system level, simulation, reproducible research
+1. Introduction
+Reproducibility is one of the pillars of scientific research.
+Although reproducibility has a long tradition in most
+nature sciences and theoretical sciences, such as mathe-
+matics, it is only recently that reproducible research has
+become more and more important in the field of signal
+processing [1,2]. In contrast to results in fields of purely
+theoretical sciences, results of signal processing research
+articles can be reproduced only if a comprehensive
+description of the investigated algorithms (including the
+setting of all necessary parameters), as well as eventually
+required input data are fully available. Owing to the lack
+of space, a fully comprehensive description of the algo-
+rithm is often omitted in research articles. Even if an
+algorithm is explained in detail, for instance, by a
+pseudo code, initialization values are often not fully
+defined. Moreover, it is often not possible to include in
+an article all the necessary resources, such as data,
+which were processed by the presented algorithms. Ide-
+ally, all resources, including source code of the pre-
+sented algorithms, should be made available for
+download to enable other researchers (and also
+reviewers of articles) to reproduce the results presented.
+Unfortunately, researcher’s reality does not resemble
+this ideal situation, a circumstance that has recently
+been quite openly complained about [3].
+In the past few years, several researchers have started
+to build up online resource databases in which simula-
+tion code and data are provided, see for example [4,5].
+However, it is still not a common practice in signal pro-
+cessing research. We are furthermore convinced that
+reproducibility should also play an important role in the
+review process of an article. Although thorough check-
+ing is very possibly impractical, it would make the pre-
+sented studies more transparent to the review process.
+Reproducibility becomes even more important when the
+systems that are simulated become more and more
+complex, as it is the case in the evaluation of wireless
+communication systems. When algorithms for wireless
+systems are evaluated, authors often claim to use a stan-
+dard-compliant transmission system and simply make
+reference to the corresponding technical specification.
+Since technical specifications are usually extensive,
+including a cornucopia of options, it is not always clear
+which parts of a specification were actually implemented
+and which parts were omitted for the sake of simplicity
+* Correspondence: chmehl@gmail.com
+Institute of Telecommunications, Vienna University of Technology, Austria
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+© 2011 Mehlführer et al; licensee Springer. This is an Open Access article distributed under the terms of the Creative Commons
+Attribution License (http://creativecommons.org/licenses/by/2.0), which permits unrestricted use, distribution, and reproduction in
+any medium, provided the original work is properly cited.
+
+--- PAGE 2 ---
+reasons. The situation of trying to reproduce someone
+else’s results to compare them to one’s own algorithm
+but not being able to do so (or only after extensive
+effort to discover the unreported details of the actual
+implementation) is familiar to most researchers. With-
+out access to the details of the implementation, includ-
+ing all assumptions, comparisons of algorithms,
+developed by different researchers, are very difficult, if
+not impossible to carry out. A way out of this dilemma
+is offered by a publicly available simulation environ-
+ment. In this study, we present such an open-source
+simulation environment that supports link and system
+level simulations of the Universal Mobile Telecommuni-
+cations System (UMTS) Long-Term Evolution (LTE),
+specifically designed to support reproducibility. The
+development and publishing of this LTE simulation
+environment is based on our previous very good experi-
+ence with a WiMAX physical layer simulator [6].
+Furthermore, such simulators can be used as a refer-
+ence for validation of algorithms, for example, when
+designing transmitter or receiver chips [7]. We also have
+used our simulators for generating LTE signals that are
+required to include realistic signals in related research
+[8], or as a reference for LTE-compliant measurements.
+In such cases, the simulator can serve not only as a data
+pump, but also as a vehicle to evaluate the received data.
+LTE, the current evolutionary step in the third Gen-
+eration Partnership Project (3GPP) roadmap for future
+wireless cellular systems, was introduced in 3GPP
+Release 8 [9]. Besides the definition of the novel physical
+layer, LTE also contains many other remarkable innova-
+tions. Most notable are (i) the redevelopment of the sys-
+tem architecture, now called System Architecture
+Evolution (SAE), (ii) the definition of network self-orga-
+nization, and (iii) the introduction of home base-sta-
+tions. The main reasons for these profound changes in
+the Radio Access Network (RAN) system design are to
+provide higher spectral efficiency, lower delay (latency),
+and more multi-user flexibility than the currently
+deployed networks.
+In the development and standardization of LTE, as
+well as in the implementation process of equipment
+manufacturers, simulations are necessary to test and
+optimize algorithms and procedures. This has to be car-
+ried out on the physical layer (link level) and in the net-
+work (system level) context:
+1) Link level simulations allow for the investigation of
+channel estimation, tracking, and prediction algorithms,
+as well as synchronization algorithms [10,11]; Multiple-
+Input Multiple-Output (MIMO) gains; Adaptive Modu-
+lation and Coding (AMC); and feedback techniques
+[12,13]. Furthermore, receiver structures (typically
+neglecting inter-cell interference and impact of schedul-
+ing, as this increases simulation complexity and runtime
+dramatically) [14], modeling of channel encoding and
+decoding [15], physical-layer modeling crucial, for sys-
+tem level simulations [16], and the like are typically ana-
+lyzed on link level. Although MIMO broadcast channels
+have been investigated quite extensively over the past
+few years [17,18], there are still a lot of open questions
+that need to be resolved, both in theory and in practical
+implementation. For example, LTE offers the flexibility
+to adjust many transmission parameters, but it is not
+clear up to now how to exploit the available Degrees of
+Freedom (DoF) to achieve the optimum performance.
+Some recent theoretical results point out how to pro-
+ceed in this matter [18,19], but practical results for LTE
+are still missing.
+2) System level simulations focus more on network-
+related issues, such as resource allocation and schedul-
+ing [20,21], multi-user handling, mobility management,
+admission control [22], interference management
+[23,24], and network planning optimization [25,26].
+Furthermore, in a multi-user oriented system, such as
+LTE, it is not directly clear which figures of merit
+should be used to assess the performance of the system.
+The classical measures of (un)coded Bit Error Ratio
+(BER), (un)coded BLock Error Ratio (BLER), and
+throughput are not covering multi-user scenario proper-
+ties. More comprehensive measures of the LTE perfor-
+mance are, for example, fairness, multi-user diversity, or
+DoF [27]. However, these theoretical concepts have to
+be mapped to performance values that can be evaluated
+by means of simulations [28,29].
+Around the world, many research facilities and ven-
+dors are investigating the above mentioned aspects of
+LTE. For that purpose, commercially available simula-
+tors applied in industry [30-32], as well simulators
+applied in academia [33], have been developed. Also,
+probably all major equipment vendors have implemen-
+ted their own, proprietary simulators. Regardless of the
+simulation tools being commercial/noncommercial, the
+development framework (C, C++, MATLAB, WM-SIM
+[33],...), or their claimed performance/flexibility, one fact
+is shared by all of the simulators. Their closed imple-
+mentation disables access to implementation details and
+thus to any assumption that may have been included.
+As such, the reliability of the results relies purely on the
+faith of a proper implementation. Independent valida-
+tion of results in such closed simulation environments is
+not easy, very time-consuming, and often not feasible.
+Since the results were obtained with closed tools, simply
+repeating the same experiment is a daunting task.
+Transparency not only in the results, but also in the
+tools employed, thus greatly magnifies the credibility of
+the results.
+The two simulators [34,35] described in Sections 2
+and 3 of this article are freely available at our homepage
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 2 of 14
+
+--- PAGE 3 ---
+http://www.nt.tuwien.ac.at/ltesimulator/ under an open,
+free for non-commercial academic use license, which
+facilitates academic research and enables a closer coop-
+eration between different universities and research facil-
+ities. In addition, developed algorithms can be shared
+under the same license again, making the comparison of
+algorithms easier, reproducible, and therefore refutable
+and more credible. To the best of the authors’ knowl-
+edge, our two simulators are the first to be published in
+the context of LTE, including source code under an aca-
+demic use license. Thus, the simulators provide oppor-
+tunities for many institutions to directly apply their
+ideas and algorithms in the context of LTE. The avail-
+ability of the simulators, together with the possibility to
+include links to the utilized simulator version and any
+resources needed furthermore, enables researchers to
+quickly reproduce published results [2].
+The remainder of this article is organized as follows.
+In Sections 2 and 3, we describe the Vienna LTE Simu-
+lators and how they relate to each other. In Section 4,
+we provide a validation of the two simulators. Exemp-
+lary simulation results are shown in Section 5. Finally,
+we conclude the article in Section 6.
+2. The Vienna LTE link level simulator
+In this section, we describe the overall structure of the
+Vienna LTE Link Level Simulator, currently (January
+2011) released in version 1.6r917. Furthermore, we pre-
+sent the capabilities of the simulator and provide some
+examples of its application.
+A. Structure of the simulator
+The link level simulator can be divided into three basic
+building blocks, namely, transmitter, channel model, and
+receiver (see Figure 1). Depending on the type of simula-
+tion, one or several instances of these basic building
+blocks are employed. The transmitter and receiver
+blocks are linked by the channel model, which is used
+to transmit the downlink data, while signaling and
+uplink feedback is assumed to be error-free. Since
+signaling is stronger protected than data, by means of
+lower coding rates and/or lower-order modulations, the
+assumption of error-free signaling is in fact quite realis-
+tic. Equivalently, errors on the signaling channels will
+only occur when the data channels are already facing
+severe performance degradation–a point of operation
+usually not targeted in investigations.
+In the downlink, the signaling information passed on
+by the transmitter to the receiver contains coding,
+HARQ, scheduling, and precoding parameters. In the
+uplink, Channel Quality Indicator (CQI), Precoding
+Matrix Indicator (PMI), and Rank Indicator (RI) are sig-
+nalled, which together form the Channel State Informa-
+tion (CSI) feedback. All simulation scenarios (see
+Section 2-B) support the feedback of CQI, PMI, and RI,
+although it is also possible to set some or all of them to
+fixed values. Such a setting is required for specific simu-
+lations, such as throughput evaluation of a single Modu-
+lation and Coding Scheme (MCS).
+A standard-compliant implementation of the downlink
+control channels would not affect the overall structure
+of our simulator and just requires the insertion of the
+control channels in the relevant resource elements [36].
+On the other hand, non-error-free feedback transmis-
+sions would require a physical layer implementation of
+the LTE uplink, which is currently not in the scope of
+the simulator. (A first release of the uplink, however, is
+currently being implemented in the simulator and will
+be released soon.)
+1) Transmitter
+The layout of the transmitter is shown in Figure 2, which
+is also a graphical representation of the transmitter
+TX
+RX
+Channel
+model
+PDP-based channel or
+Winner+ channel trace
+CSI feedback,
+ACK/NACKs
+Delay
+signaling
+coded/uncoded BER
+block error rate
+throughput
+Figure 1 LTE link level simulator overall structure, as
+implemented in the Vienna LTE link level simulator. The
+simulator comprises by one or more transmitter blocks, channel
+modeling for each link, and receiver blocks. The feedback channel is
+implemented as a delayed error-free signaling channel.
+per-user channel coding
+of the data bits
+random data bits
+generation
+data bits
+allowed
+coding
+params
+precoding
+params
+modulation
+params
+HARQ control
+symbol mapping
+layer mapping,
+precoding
+RB
+allocation
+OFDM symbol assembly
+IFFT
+transmitted signal
+signaling
+user feedback
+reference/sync
+symbols
+scheduler
+CP insertion
+Figure 2 LTE downlink transmitter implementation in the
+Vienna LTE link level simulator, as specified in [36-38].
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 3 of 14
+
+--- PAGE 4 ---
+description defined in the TS36’ standard series [36-38].
+Based on User Equipment (UE) feedback values, a sche-
+duling algorithm assigns Resource Blocks (RBs) to UEs
+and sets an appropriate MCS (coding rates between
+0.076 and 0.926 with 4, 16, or 64-QAM modulation [38]),
+the MIMO transmission mode (Transmit Diversity
+(TxD), Open Loop Spatial Multiplexing (OLSM), or
+Closed Loop Spatial Multiplexing (CLSM)), and the pre-
+coding/number of spatial layers for all served users. Such
+a channel adaptive scheduling allows for the exploitation
+of frequency diversity, time diversity, spatial diversity,
+and multi-user diversity.
+Given the number of available DoF, the specific imple-
+mentation of the scheduler algorithm has a large impact
+on the system performance and has been a hot topic in
+research [39-41]. In Section 5-B, we provide perfor-
+mance evaluations of several schedulers.
+2) Channel model
+The Vienna LTE Link Level Simulator supports block-
+and fast-fading channels. In the block-fading case, the
+channel is constant during the duration of one subframe
+(1 ms). In the fast-fading case, time-correlated channel
+impulse responses are generated for each sample of the
+transmit signal. Currently (January 2011), the simulator
+supports the following channel models:
+1) Additive White Gaussian Noise (AWGN);
+2) Flat Rayleigh fading;
+3) Power Delay Profile-based channel models, such
+as ITU Pedestrian B, or ITU Vehicular A [42];
+4) Winner Phase II+ [43]
+The most sophisticated of these channel models is the
+Winner Phase II+ model. It is an evolution of the 3GPP
+spatial channel model, and introduces additional fea-
+tures, such as support for arbitrary 3D antenna patterns.
+3) Receiver
+Figure 3 shows our implementation of the UE receiver.
+After disassembling the RBs according to the UE
+resource allocation, MIMO Orthogonal Frequency Divi-
+sion Multiplexing (OFDM) detection is carried out. The
+simulator currently supports Zero-Forcing (ZF), Linear
+Minimum Mean Squared Error (LMMSE), and soft
+sphere decoding as detection algorithms. The detected
+soft bits are decoded to obtain the data bits and several
+figures of merit, such as coded/uncoded BER, BLER,
+and throughput.
+Currently, four different types of channel estimators are
+supported within the simulator: (i) Least Squares (LS), (ii)
+Minimum Mean Squared Error (MMSE), (iii) Approxi-
+mate LMMSE [44], and (iv) genie-driven (near) perfect
+channel knowledge based on all transmitted symbols.
+LTE requires UE feedback to adapt the transmission
+to the current channel conditions. The LTE standard
+specifies three feedback indicators for that purpose:
+CQI, RI, and PMI [36]. The CQI is employed to choose
+the appropriate MCS, such as to achieve a predefined
+target BLER, whereas the RI and the PMI are utilized
+for MIMO pre-processing. Specifically, the RI informs
+the eNodeB about the preferred number of parallel spa-
+tial data streams, while the PMI signals the preferred
+precoder that is stemming from a finite code book as
+specified in [36]. Very similar feedback values are also
+employed in other systems such as WiMAX and WiFi.
+The simulator provides algorithms that utilize the esti-
+mated channel coefficients to evaluate these feedback
+indicators [13]. Researchers and engineers working on
+feedback algorithms can implement other algorithms
+using the provided feedback functions as a starting
+point to define their own functions.
+Given this receiver structure, the simulator allows the
+investigation of various aspects, such as frequency syn-
+chronization [45], channel estimation [44], or interfer-
+ence awareness [46].
+B. Complexity
+Link level simulators are in practice a direct standard-
+compliant implementation of the Physical (PHY) layer
+procedures, including segmentation, channel coding,
+MIMO, transmit signal generation, pilot patterns, and
+synchronization sequences. Therefore, implementation
+complexity and simulation time are in general high. To
+obtain a simulator with readable and maintainable code,
+a high-level language (MATLAB) has been chosen. This
+choice enabled us to develop the simulator in a fraction
+of the time required for an implementation in other lan-
+guages such as C. Furthermore, MATLAB ensures
+cross-platform compatibility. While MATLAB is cer-
+tainly slower than C, by means of code optimization
+signaling
+throughput
+BER
+BLER
+resource block
+disassembling
+RB allocation
+decoded
+data bits
+user
+feedback
+CQI/PMI/RI
+feedback
+calculation
+MIMO RX and OFDM detection
+received signal
+time-frequency
+resource block  grid
+CP removal
+FFT
+precoding
+coding
+params
+channel decoding
+channel
+estimation
+Figure 3 LTE downlink receiver structure, as implemented in
+the Vienna LTE link level simulator.
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 4 of 14
+
+--- PAGE 5 ---
+(vectorization) and parallelization by the MATLAB Par-
+allel/Distributed Computing Toolbox, simulation run-
+time can be greatly reduced. Severely difficult-to-
+vectorize and often-called functions are implemented in
+C and linked to the MATLAB code by means of MEX
+functions. Such functions include the channel coding/
+decoding [47], Cyclic Redundancy Check (CRC) compu-
+tation [48], and soft sphere decoding.
+Furthermore, it is possible to adjust the scale of the
+simulation to the specific needs. This is achieved by
+introducing three different simulation types with largely
+different computational complexity (Figure 4):
+1) Single-downlink
+This simulation type only covers the link between one
+eNodeB and one UE. Such a set-up allows for the inves-
+tigation of channel tracking, channel estimation [44],
+synchronization [11,49], MIMO gains, AMC and feed-
+back optimization [13], receiver structures [14] (neglect-
+ing interference and impact of the scheduling,a
+modeling of channel encoding and decoding [15,50],
+and physical layer modeling [51], which can be used for
+system level abstraction of the physical layer. To start a
+simple single-downlink simulation, run the file LTE_-
+sim_batch_single_downlink.m.
+2) Single-cell multi-user
+This simulation covers the links between one eNodeB
+and multiple UEs. This set-up additionally allows for the
+investigation of receiver structures that take into
+account the influence of scheduling, multi-user MIMO
+resource allocation, and multi-user gains. Furthermore,
+this set-up allows researchers to investigate practically
+achievable multi-user rate regions. In the current imple-
+mentation, the simulator fully evaluates the receivers of
+all users. However, if receiver structures are being
+investigated, the computational complexity of the simu-
+lation can considerably be reduced by only evaluating
+the user of interest. In order to enable a functional sche-
+duler, it is sufficient to compute just the feedback para-
+meters for all other users. To start a simple single-cell
+multi-user simulation, run the file LTE_sim_batch_sin-
+gle_cell_multi_user.m.
+3) Multi-cell multi-user
+This simulation is by far the computationally most
+demanding scenario and covers the links between multi-
+ple eNodeBs and UEs. This set-up allows for the realis-
+tic
+investigation
+of
+interference-aware
+receiver
+techniques [52], interference management (including
+cooperative transmissions [53] and interference align-
+ment [54,55]), and network-based algorithms such as
+joint resource allocation and scheduling. Furthermore,
+despite the vast computational efforts needed, such
+simulations are crucial to verify system level simulations.
+To start a simple multi-cell multi-user simulation, run
+the file LTE_sim _batch_multi_cell_multi_user.m.
+The simulation time, which depends mainly on the
+desired precision and statistical accuracy of the simula-
+tion results, the selected bandwidth, the transmission
+mode, and the chosen modulation order, is for most
+users a crucial factor. It should be noted that by a smart
+choice of the simulation settings, the simulation time can
+be decreased (e.g., when investigating channel estimation
+performance, the smallest bandwidth can be sufficient).
+3. The Vienna LTE system level simulator
+In this section, we describe the overall structure of the
+Vienna LTE System Level Simulator, currently devel-
+oped (January 2011) version 1.3r427. We furthermore
+show how the PHY layer procedures have been
+abstracted in a low complexity manner.
+A. Structure of the simulator
+In system level simulations, the performance of a whole
+network is analyzed. In LTE, such a network consists of
+a multitude of eNodeBs that cover a specific area in
+which many mobile terminals are located and/or moving
+around. While simulations of individual physical layer
+links allow for the investigation of MIMO gains, AMC
+feedback, modeling of the channel code, and retransmis-
+sions [13,44,45,50,56], it is not possible to reflect the
+effects of cell planning, scheduling, or interference in a
+large scale with dozens of eNodeBs and hundreds of
+users. Simply performing physical layer simulations of
+the radio links between all terminals and base-stations is
+unfeasible for system level investigations because of the
+vast amount of computational power required. Thus,
+the physical layer has to be abstracted by simplified
+models capturing its essential dynamics with high accu-
+racy at low complexity.
+single-downlink
+single-cell multi-user
+multi-cell multi-user
+X2
+Figure 4 Three possible scenarios in the Vienna LTE link level
+simulator allow us to adjust the scale of the simulation
+complexity: single-downlink, single-cell multi-user, and multi-
+cell multi-user.
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 5 of 14
+
+--- PAGE 6 ---
+Based on the standard approach in the literature
+[51,57], our simulator consists of two parts: (i) a link
+measurement model, and (ii) a link performance model.
+The link measurement model reflects the link quality,
+given by the UE measurement reports, and is required
+to carry out link adaptation and resource allocation. The
+chosen link quality measure is evaluated per subcarrier.
+Based on the Signal to Interference and Noise Ratio
+(SINR), the UE computes the feedback (PMI, RI, and
+CQI), which is employed for link adaptation at the eNo-
+deB as described in Section 2-A. The scheduling algo-
+rithm assigns resources to users to optimize the
+performance of the system (e.g., in terms of throughput)
+based on this feedback [21]. Based on the link measure-
+ment model, the link performance model predicts the
+BLER of the link, based on the receiver SINR and the
+transmission parameters (e.g., modulation and coding).
+Figure 5 illustrates the interaction between the two
+models and the several physical layer parameters.
+Implementation-wise, the simulator follows the struc-
+ture shown in Figure 6. Each network element is repre-
+sented by a suitable class object, whose interactions are
+described below.
+In order to generate the network topology, transmis-
+sion sites are generated, to which three eNodeBs are
+appended, i.e., sectors, each containing a scheduler (see
+Figure 6). In the simulator, traffic modeling assumes full
+buffers in the downlink. A scheduler assigns PHY
+resources, precoding matrices, and a suitable MCS to
+each UE attached to an eNodeB. The actual assignment
+depends on the scheduling algorithm and the received
+UE feedback.
+At the UE side, the received subcarrier post-equaliza-
+tion symbol SINR is calculated in the link measurement
+model. The SINR is determined by the signal, interfer-
+ence, and noise power levels, which are dependent on
+the cell layout (defined by the eNodeB positions, large-
+scale (macroscopic, macro-scale) pathloss, shadow fad-
+ing [58]), and the time-variant small-scale (microscopic,
+micro-scale) fading [59].
+The CQI feedback report is calculated based on the
+subcarrier SINRs and the target transport BLER. The
+CQI reports are generated by an SINR-to-CQI mapping
+[35] and made available to the eNodeB implementation
+via a feedback channel with adjustable delay. At the
+transmitter, the appropriate MCS is selected by the CQI
+to achieve the targeted BLER during the transmission.
+Especially in high mobility scenarios, the feedback delay
+caused by computation and signaling timings can lead to
+a performance degradation if the channel state changes
+significantly during the delay. In the link performance
+model, an AWGN-equivalent SINR (gAWGN) is
+obtained via Mutual Information Effective Signal to
+Interference and Noise Ratio Mapping (MIESM) [60-62].
+In a second step, gAWGN is mapped to BLER via AWGN
+link performance curves [34,35]. The BLER value acts as
+a probability for computing ACK/NACKs, which are
+combined with the Transport Block (TB) size to compute
+the link throughput. The simulation output consists of
+traces, containing link throughput and error ratios for
+each user, as well as cell aggregates, from which statistical
+distributions of throughputs and errors can be extracted.
+B. Complexity
+One desirable functionality of a system level simulator is
+the ability to precalculate as many of the simulation
+mobility management
+link-performance
+model
+micro-scale fading
+interference
+structure
+macro-scale fading
+antenna gain
+shadow fading
+throughput
+error rates
+error distribution
+traﬃc model
+resource scheduling
+strategy
+precoding
+base-station deployment
+antenna gain pattern
+tilt/azimuth
+network layout
+power allocation strategy
+link-measurement
+model
+link adaptation strategy
+Figure 5 Schematic block diagram of the LTE system level
+simulator. Link quality is evaluated by means of the link-
+measurement model, while the link-performance model maps it to
+BLER and outputs link throughput and error distribution.
+scheduler
+resource allocation
+channel adaptation
+attached UEs DL channels
+eNodeBs
+UEs
+SINR-to-CQI mapping
+SINR-to-BLER mapping
+BLER, throughput
+interference
+signal
+noise
+subcarrier SINR
+calculation & averaging
+signaling
+downlink channels
+macroscopic pathloss
+shadow fading
+small scale fading
+UE-speciﬁc
+signaling
+feedback
+UL-Channel
+Figure 6 Schematic class diagram showing the implementation
+of the link-to-system model in the LTE System Level Simulator
+and depicting the relationship between the several elements/
+classes in the simulator. Implementation-wise, both the link-
+measurement and the link-performance model reside in the UE
+class.
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 6 of 14
+
+--- PAGE 7 ---
+parameters as possible. This not only reduces the com-
+putational load while carrying out a simulation, but also
+offers repeatability by loading an already partly precalcu-
+lated scenario.
+The precalculations involved in the LTE system level
+simulator are the generation of (i) eNodeB-dependent
+large-scale pathloss maps, (ii) site-dependent shadow
+fading maps, and (iii) time-dependent small-scale fading
+traces for each eNodeB-UE pair.
+1) Pathloss and fading maps
+The large-scale pathloss and the shadow fading are
+modeled as position-dependent maps. The large-scale
+pathloss is calculated according to well-known models
+[58,63] and combined with the antenna gain pattern of
+the corresponding eNodeB. Space-correlated shadow
+fading is obtained from a log-normal random distribu-
+tion using a low-complexity variant of the Cholesky
+decomposition [64]. Inter-site map correlation for sha-
+dow fading is similarly obtained. Figure 7 shows exemp-
+lary large-scale pathloss and shadow fading maps.
+2) Time-dependent fading trace
+While the large-scale pathloss and the shadow fading
+are modeled as position-dependent trace, the small-scale
+fading is modeled as a time-dependent trace. The calcu-
+lation of this latter trace is based on the transmitter pre-
+coding, the small-scale fading MIMO channel matrix,
+and the receive filter. Currently, the receiver modeling is
+based on a linear ZF receiver. The small-scale fading
+trace consists of the signal power and the interference
+power after the receive filter. The break-down into these
+two parts significantly reduces the computational effort
+since it avoids many complex multiplications required
+when directly working with MIMO channel matrices on
+system level [16,35,51].
+4. Validation of the simulators
+The validation of the simulators was performed in two
+steps. First, in Section 4-A we compared the link level
+throughput with the minimum performance require-
+ments stated by 3GPP in the technical specification TS
+36.101 [65]. Second, in Section 4-B, we cross-validated
+the link and the system level simulators by comparing
+their results against each other. Other means of valida-
+tion are being discussed in Section 4-C.
+A. 3GPP minimum performance requirements
+The technical specification TS 36.101 [65] defines mini-
+mum performance requirements for a UE that utilizes a
+dual-antenna receiver. These requirements have to be
+met by real devices and therefore have to be surpassed
+by our simulator, in which not every conceivable influ-
+ential factor is incorporated.b Such factors may include
+frequency and timing synchronization as well as other
+non-ideal effects, such as quantization or non-ideality of
+the manufactured physical components (e.g., I/Q imbal-
+ances, phase noise, and power amplifier nonlinearities).
+In particular, TS 36.101 specifies reference measure-
+ment channels for the Physical Downlink Shared Chan-
+nel (PDSCH) (comprising bandwidth, AMC scheme,
+overhead,...) and propagation conditions (power delay
+profiles, Doppler frequencies, and antenna correlation).
+The considered simulation scenarios are completely spe-
+cified by referring to sections and test numbers in TS
+36.101. For example, in TS 36.101 Section 8.2.1.1.1, the
+tests for a single transmit antenna NT = 1 and dual
+receive antenna NR = 2 scenario are defined. By refer-
+ring to test number one in Section 8.2.1.1.1 of TS
+36.101, the AMC mode is defined as Quadrature Phase
+Shift Keying (QPSK) with a target coding rate of 1/3,
+Extended Vehicular A (EVehA) channel model with a
+Doppler frequency of 5 Hz, and low antenna correlation.
+For our simulations presented in this article, we selected
+four test scenarios with a bandwidth of 10 MHz but dif-
+ferent transmit modes (single antenna port transmission,
+OLSM, and TxD), different AMC schemes, and different
+channel models. Hybrid Automatic Repeat reQuest
+(HARQ) is supported by at most three retransmissions.
+The most important parameters of the test scenarios are
+listed in Table 1. The first scenario (8.2.1.1.1/1) refers to
+the test scenario described above. The OLSM scenario
+(8.2.1.3.2/1) utilizes a rank two transmission, that is,
+transmission of two spatial streams.
+Simulation results for the considered scenarios are
+shown in Figure 8. The dashed horizontal lines corre-
+spond to 70% of the maximum throughput values for
+which TS 36.101 defines a channel signal-to-noise ratio
+x pos [m]
+y pos [m]
+ 
+ 
+−1000 −500
+0
+500
+1000
+−1000
+−800
+−600
+−400
+−200
+0
+200
+400
+600
+800
+1000
+70
+80
+90
+100
+110
+120
+130
+140
+ 
+ 
+−1000 −500
+0
+500
+1000
+−40
+−30
+−20
+−10
+0
+10
+20
+30
+40
+x pos [m]
+pathloss [dB]
+shadow fading [dB]
+eNodeB
+eNodeB
+eNodeB
+site-dependent: same
+for all eNodeBs in site
+eNodeB-dependent: one
+independent pathloss map
+per eNodeB
+Figure 7 eNodeB- and site-dependance of the large-scale
+pathloss and shadow fading. Left: Large-scale pathloss and
+antenna gain map [dB] corresponding to the lower-leftmost
+eNodeB. Right: space-correlated shadow fading corresponding to
+the site [dB].
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 7 of 14
+
+--- PAGE 8 ---
+(SNR) requirement (shown as crosses in Figure 8). For
+all the considered test scenarios, the link level simulator
+outperforms the minimum requirements by approxi-
+mately 2-3 dB. The small vertical bars within the mar-
+kers in 8 are the 99% confidence intervals of the
+simulated mean throughput. Since the confidence inter-
+vals are much smaller than the distances between the
+individual throughput curves, we know that a repeated
+simulation with different seeds of the random number
+generators will lead to similar results and conclusions.
+Figure 8 can be reproduced by calling the script Repro-
+ducibility_RAN_sims.m included in the link level
+simulator.
+B. Link and system level cross-comparison
+Next, we cross-compare the performance of the link and
+system level simulators. We consider a single user sin-
+gle-cell scenario with different antenna configurations
+and transmit modes, as summarized in Table 2.
+Depending on the channel conditions, we adapt the
+AMC scheme, the transmission rank, and the precod-
+ing matrices. For this purpose, we utilize the UE
+feedback schemes originally presented in [13]. In
+order to create an equivalent simulation scenario on
+link and system level, we do not employ shadow fad-
+ing. While on link level the SNR is usually directly
+specified, on system level the SNR is a function of
+the user location in the cell. Without shadow fading,
+the user SNR on system level becomes a function of
+the distance between base-station and the user. This
+can be utilized to indirectly select appropriate SNR
+values in the system level simulator. The results of
+the link and system level comparisons are shown in
+Figure 9. For all the considered simulation scenarios,
+we obtain an excellent match between the results of
+the two simulators, confirming the validity of our
+Link Error Prediction (LEP) model [50] on system
+level. Figure 9 can be reproduced by running the
+script Reproducibility _LLvsSL_batch.m provided in
+the system level simulator package. Further compari-
+sons between link and system level simulator results
+are shown in Section 5-B.
+Table 1 Test scenarios of 3GPP TS 36.101
+8.2.1.1.1/1
+8.2.1.1.1/8
+8.2.1.2.1/1
+8.2.1.3.2/1
+TX mode
+Single ant.
+Single ant.
+TxD
+OLSM
+Channel
+EVehA
+ETU
+EVehA
+EVehA
+Doppler freq.
+5 Hz
+300 Hz
+5 Hz
+70 Hz
+Modulation
+QPSK
+16QAM
+16QAM
+16QAM
+Code rate
+1/3
+1/2
+1/2
+1/2
+NT × NR
+1 × 2
+1 × 2
+2 × 2
+4 × 2
+Antenna corr.
+Low
+High
+Medium
+Low
+Channel SNR req.
+-1 dB
+9.4 dB
+6.8 dB
+14.3 dB
+20
+15
+10
+5
+0
+-5
+-10
+-15
+25
+20
+15
+10
+5
+0
+channel SNR [dB]
+mean throughput [Mbit/s]
+8.2.1.1.1/1
+8.2.1.2.1/1
+8.2.1.1.1/8
+8.2.1.3.2/1
+8.2.1.1.1/1
+8.2.1.2.1/1
+8.2.1.1.1/8
+8.2.1.3.2/1
+Figure 8 Throughput simulations of the test scenarios in 3GPP
+TS 36.101 and comparison to the minimum performance
+requirements (marked with crosses). The small vertical bars
+within the circular markers indicate the 99% confidence intervals.
+Reproducible by running Reproducibility_RAN_sims.m.
+Table 2 Test scenarios for the cross-comparison of the
+link and system level simulators (SU CASE)
+SISO
+TxD
+OLSM
+CLSM
+Channel
+TU
+TU
+TU
+TU
+Bandwidth
+1.4 MHz
+1.4 MHz
+1.4 MHz
+1.4 MHz
+Antenna conf.
+1 × 1
+2 × 2
+2 × 2
+4 × 2
+CQI feedback
+✓
+✓
+✓
+✓
+RI feedback
+✕
+✕
+✓
+✓
+PMI feedback
+✕
+✕
+✕
+✓
+Simulation time LL
+3 200 s
+9 500 s
+19 500 s
+14 200 s
+Simulation time SL
+800 s
+1 000 s
+1 100 s
+1 200 s
+Speed-up
+4
+9.5
+17.7
+11.8
+TU, typical urban channel model [75].
+40
+30
+20
+10
+0
+-10
+10
+8
+6
+4
+2
+0
+channel SNR [dB]
+mean throughput [Mbit/s]
+link level
+system level
+link level
+system level
+4x2 CLSM
+2x2 OLSM
+1x1 SISO
+2x2 TxD
+4x2 CLSM
+2x2 OLSM
+1x1 SISO
+2x2 TxD
+Figure 9 Cross-comparison of throughput results obtained
+with the link level and the system level simulators. The small
+vertical bars within the circular markers indicate the 99% confidence
+intervals. Reproducible by running Reproducibility_LLvsSL_batch.m.
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 8 of 14
+
+--- PAGE 9 ---
+In Table 2 we compare the simulation times of the
+link level simulator to those of the system level simula-
+tor. The simulations were conducted on a single core of
+a 2.66 GHz Quad Core CPU. The table also states the
+simulation speed-up, defined as the ratio of the simula-
+tion times required with the link level and the system
+level simulator, respectively. The speed-up of the system
+level simulator for a Single-Input Single-Output (SISO)
+system equals four. This speed-up is rather small
+because equalization, demodulation, and decoding (tasks
+that are abstracted on system level) have low complexity
+in a SISO system. With increasing system complexity
+also the speed-up increases. We expected the largest
+speed-up in the CLSM scenario, because it utilizes the
+largest antenna configuration. However, we measured
+the largest speed-up of almost 18 in the OLSM simula-
+tion scenario. The reason is, that the precoder changes
+from one subcarrier to the next, while in the CLSM sce-
+nario, we assumed wideband feedback meaning that the
+same precoder is employed on all the subcarriers [13].
+The link level simulator supports the parallel comput-
+ing capabilities of MATLAB. With these features, it is
+possible to run several MATLAB instances in parallel
+on the multiple cores of a modern CPU. The simulation
+time of the link level simulator then decreases linearly
+with the number of CPU cores, while the system level
+simulator is currently not capable of parallel computing.
+C. Further validation means
+For a basic validation of the correctness of the results
+produced by the simulator, we checked the uncoded
+BER and throughput performance over frequency flat
+Rayleigh fading and AWGN channels, as the theoretical
+performance of these channels is known [66]. Further-
+more, we cross-checked our results with those produced
+by the other industry simulators, by comparing with
+corresponding publications of the 3GPP RAN WG1, e.
+g., [28,29]. Still, an open issue is to prove a correct func-
+tionality of each part of the simulator. Evaluation of the
+simulators has also been made possible for the whole
+research community, allowing everybody to modify the
+code to meet individual requirements and to check the
+code for correctness [67-69], as the simulator’s change-
+log reflects. The first versions of the simulators have
+been released in May 2009 (link level simulator) and in
+March 2010 (system level simulator), respectively. To
+facilitate the exchange of bugs and/or results often
+referred to as “crowdsourcing,” a forumc is also pro-
+vided. While the authors acknowledge this is not a per-
+fect form of validation, neither is any other.
+5. Exemplary results
+In this section, we show two exemplary simulation
+results obtained with the Vienna LTE simulators. First,
+we present a link level throughput simulation in which
+we compare the throughput of the different MIMO
+schemes to theoretic bounds. Based on this simulation
+setup, researchers can investigate algorithms such as
+channel estimation, detection, or synchronization. Sec-
+ond, we compare the performance of different state-of-
+the-art schedulers in a single-cell multi-user environ-
+ment. These schedulers serve as reference for research-
+ers investigating advanced scheduling techniques.
+A. Link level throughput
+Before presenting the link level throughput results of the
+different LTE MIMO schemes, we introduce theoretic
+bounds for the throughput. We identify three bounds,
+namely, the mutual information, the channel capacity,
+and the so-called achievable mutual information.
+Depending on the type of channel state information
+available at the transmitter (only receive SNR, full, or
+quantized), an ideal transmission system is expected to
+attain one of these bounds.
+1) Mutual information
+The mutual information is the theoretic bound for the
+data throughput if only the receive SNR but no further
+channel state information is available at the transmitter
+side [70]:
+I =
+Ntot
+
+k=1
+Bsublog2 det
+
+INR + 1
+σ 2n
+HkHH
+k
+
+(1)
+where Bsub denotes the bandwidth occupied by a sin-
+gle data subcarrier, Hk the NR×NT (= number of receive
+antennas × number of transmit antennas) dimensional
+MIMO channel matrix of the k-th subcarrier, σ 2
+n the
+energy of noise and interference at the receiver, Ntot the
+total number of usable subcarriers, and INR an identity
+matrix of size equal to the number of receive antennas
+NR. In Equation (1), we normalized the transmit power
+to
+one
+and
+the
+channel
+matrix
+according
+to
+E{||Hk||2
+2} = 1. Therefore, Equation (1) does not show a
+dependence on the transmit power and the number NT
+of transmit antennas.
+The bandwidth Bsub of a subcarrier is calculated as
+Bsub =
+N
+Tsub −Tcp
+,
+(2)
+where Ns is the number of OFDM symbols in one
+subframe (usually equal to 14 when the normal cyclic
+prefix length is selected), Tsub the subframe duration (1
+ms), and Tcp the time required for the transmission of
+all cyclic prefixes within one subframe. Note that we are
+calculating the mutual information for all usable subcar-
+riers of the OFDM system, thereby taking into account
+the loss in spectral efficiency caused by the guard band
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 9 of 14
+
+--- PAGE 10 ---
+carriers. If different transmission systems that apply dif-
+ferent modulation formats are to be compared, however,
+a fair comparison then requires calculating the mutual
+information over the entire system bandwidth instead of
+calculating it only over the usable bandwidth.
+Current communication systems employ adaptive
+modulation and coding schemes to optimize the data
+throughput. For a specific receive SNR, assuming an
+optimum receiver, the modulation and coding scheme
+that maximizes the data throughput can be selected.
+Thus, if the transmitter knows the receive SNR, a
+throughput equal to the mutual information should be
+achieved.
+2) Channel capacity
+For calculating the channel capacity of a frequency
+selective MIMO channel [66], consider the singular
+value decomposition of the channel matrix Hk scaled by
+the standard deviation sn of the additive white Gaussian
+noise impairment:
+1
+σn
+Hk = Uk
+
+k
+VH
+k
+; with
+
+k
+= diag
+
+λk,m
+
+m = 1 . . . min(NR, NT)
+(3)
+The optimum, capacity-achieving, frequency-dependent
+precoding at the transmitter is given by the unitary matrix
+Vk. If this precoding matrix is applied at the transmitter
+and also the optimum receive filter UH
+k is employed, then
+the MIMO channel is separated into min(NR, NT) (with
+NR denoting the number of receive antennas and NT the
+number of transmit antennas) independent SISO channels,
+each with a gain of
+
+λk,m,, m = 1...min(NR, NT), k = 1...
+Ntot. The channel capacity is obtained by optimally distri-
+buting the available transmit power over these parallel
+SISO subchannels. The optimum power distribution Pk, m
+is the solution of the optimization problem:
+C = max
+Pk,m
+1
+Ntot
+min(NR,NT)
+
+m=1
+Ntot
+
+k=1
+log2(1 + Pk,mλk,m)
+subject to
+min(NR,NT)
+
+m=1
+Ntot
+
+k=1
+Pk,m = Pt.
+(4)
+where the second equation is a transmit power con-
+straint that ensures an average transmit power equal to
+the number of data subcarriers: Pt = Ntot. Note that
+owing to the definition of
+
+λk,m, in Equation (3), the
+power distribution Pk, m and thus Pt remain dimension-
+less. We calculate the power coefficients maximizing
+Equation (4) by the water-filling algorithm described in
+[66]. In order to achieve a throughput equal to the chan-
+nel capacity, the transmitter needs full channel state
+information and has to apply the optimum precoder.
+Furthermore, the receiver needs to apply the optimum
+receive filter to separate the parallel SISO subchannels.
+3) Achievable mutual information
+Both mutual information and channel capacity do not
+consider system design losses caused, for example, by
+the transmission of cyclic prefix or reference symbols,
+or the quantization of the transmitter precoding. In
+order to obtain a tighter bound for the link level
+throughput, we therefore consider these effects in the
+definition of the so-called achievable mutual informa-
+tion. In the case of open-loop transmission, in which
+space-time coding is employed at the transmitter, we
+obtain for the achievable mutual information:
+I(OL)
+a
+=
+Ntot
+
+k=1
+FBsub
+1
+NL
+log2 det
+
+INRNL + 1
+σ 2n
+˜Hk ˜H
+H
+k
+
+, (5)
+with NL denoting the number of spatial transmission
+layers. The NRNL×NT dimensional matrix ˜Hk is the
+effective channel matrix including the space-time coding
+[71]. The factor F accounts for the inherent system
+losses due to the transmission of the cyclic prefix and
+the reference symbols. In detail, the factor F is calcu-
+lated as
+F = Tsub −Tcp
+Tsub
+
+	
+
+CP loss
+· Nsc · Ns/2 −Nref
+Nsc · Ns/2
+
+	
+
+reference symbols loss
+,
+(6)
+where Nref is the number of reference symbols per
+resource block, and Nsc = 12 is the number of subcar-
+riers in each RB. In LTE, the number of reference sym-
+bols depends on the number of transmit antennas.
+Therefore, the efficiency factor F decreases with increas-
+ing number of transmit antennas (see Table 3).
+In the case of closed-loop transmission, a channel-
+adapted precoding matrix W is chosen from a set W
+(defined in the standard) and applied to the transmit
+signal. We calculate the achievable mutual information
+for closed-loop transmission as
+I(CL)
+a
+= max
+W∈W
+Ntot
+
+k=1
+FBsub log2 det
+
+INR + 1
+σ 2n HkWWHHH
+k
+
+.
+(7)
+In Figure 10, the throughput of a 2×2 LTE system
+with 5 MHz bandwidth, perfect channel knowledge, and
+Table 3 pilot symbols and efficiency factor F in LTE
+Transmit antennas
+NT
+Reference symbols
+Nref
+Efficiency factor F
+(%)
+1
+4
+88.88
+2
+8
+84.44
+4
+12
+80
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 10 of 14
+
+--- PAGE 11 ---
+a Soft Sphere Decoder (SSD) receiver is shown and
+compared to the previously presented theoretic bounds.
+The difference between channel capacity and mutual
+information is only small, and, therefore, even knowl-
+edge of the full channel state information at the trans-
+mitter does not considerably increase the potential
+performance. In contrast, the difference between the
+mutual information and the achievable mutual informa-
+tion is much larger, resulting in a loss of 56% at an SNR
+of 15 dB. Most (41%) of this loss is due to the restric-
+tions implied by the standard, as indicated by the
+achievable mutual information curves in Figure 10. At a
+rate of 16 Mbit/s, the difference between achievable
+mutual information and simulated throughput is
+approximately 4 dB. These findings are similar to the
+results we obtained when analyzing the performance of
+WiMAX and High-Speed Downlink Packet Access
+(HSDPA) in [72].
+Figure 10 furthermore shows that, for SNRs lower
+than 14 dB, the TxD mode outperforms OLSM. Only at
+larger SNRs, above 20 dB, where the throughput of the
+TxD mode saturates, OLSM benefits from the second
+spatial stream and outperforms TxD.
+Figure 10 can be reproduced by executing the script
+Physical_Layer_batch.m provided in the Vienna LTE
+Link Level Simulator package.
+B. LTE scheduling
+In this section, the performance of various multiuser
+LTE scheduling techniques is compared by means of
+link level and system level simulations. By appropriately
+selecting the simulation parameters in the link level, as
+well as the system level, we are able to show that the
+results obtained by the two simulators are equivalent.
+In particular, we consider in the Vienna LTE System
+Level Simulator one sector of a single-cell SISO system
+with 20 randomly positioned users. The user positions
+yield the large-scale path loss and shadow fading coeffi-
+cients of all the users, and as a consequence, the average
+receive SNRs, which are distributed in a range of 2.7 dB
+to 36 dB. These average receive SNRs of the 20 users
+are set in the Vienna LTE Link Level Simulator to
+ensure the same propagation environment as on system
+level. Further simulation parameters of both simulators
+are summarized in Table 4.
+The simulation results are averaged over 2,500 small-
+scale fading and noise realizations. In order to guarantee
+exactly the same channel realizations for all scheduler
+simulations on system level, the user positions, as well
+as the small- and large-scale fading realizations are
+loaded from pre-generated files. On link level, the seeds
+of the random number generators for fading and noise
+generation are set at the beginning of each simulation.
+A performance comparison of different scheduling
+strategies is shown in Figures 11 and 12 in terms of
+total sector throughput and fairness (Jain’s fairness
+index [73]). The figures show that the results produced
+by the link and system level simulators are very similar
+for both throughput and fairness. The largest difference
+between the results of the two simulators is less than
+2%, while the 99% confidence intervals (too small to be
+identified in the figures) of the simulated throughput are
+much smaller. Thus, we conclude that the system level
+simulator is properly calibrated; that is, the approxima-
+tion and modeling of the link level does not result in
+large errors on system level.
+The considered schedulers pursue different goals for
+resource allocation. The best CQI scheduler tries to
+maximize total throughput and completely ignores fair-
+ness by just assigning resources to the users with the
+30
+20
+10
+0
+-10
+40
+30
+20
+10
+0
+channel SNR [dB]
+rate [Mbit/s]
+channel capacity
+mutual
+information
+achievable
+mutual
+information
+throughput
+OLSM
+TxD
+channel capacity
+mutual
+information
+achievable
+mutual
+information
+throughput
+OLSM
+TxD
+41%
+44%
+15%
+1.7 dB
+5.2 dB
+4 dB
+Figure 10 Throughput of a 2×2 system with 5-MHz bandwidth
+compared to the channel capacity, the mutual information,
+and the achievable mutual information. The small vertical bars
+within the circular markers indicate the 99% confidence intervals.
+Reproducible by running Physical_Layer_batch.m.
+Table 4 Link and system level parameters for the
+scheduling simulations
+Parameter
+Value
+System bandwidth
+5 MHz
+Number of subcarriers
+300
+Number of resource blocks
+50
+Number of users
+20
+Channel model
+3GPP TU [76]
+Channel realizations
+2 500
+Antenna configuration
+1 transmit, 1 receive (1 × 1)
+Receiver
+Zero forcing (ZF)
+Schedulers
+Best CQI (BCQI)
+Maxmin
+Proportional fair
+Resource fair
+Round robin
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 11 of 14
+
+--- PAGE 12 ---
+best channel conditions. This is reflected in the simula-
+tion results in Figures 11 and 12, showing the highest
+system throughput and the lowest fairness for the best
+CQI scheduler. In contrast, the maxmin-scheduler
+assigns the resources in a way that equal throughput for
+all users is guaranteed, thereby maximizing Jain’s fair-
+ness index [73]. Round robin scheduling does not con-
+sider the user equipment feedback and cyclically assigns
+the same amount of resources to each user. Thus, ignor-
+ing the user equipment feedback results in the worst
+throughput performance of all schedulers consider here.
+The proportional fair scheduler emphasizes multiuser
+diversity by scheduling the user who has the best cur-
+rent channel realization relative to its own average. The
+resource fair scheduling strategy guarantees an equal
+amount of resources for all users while trying to maxi-
+mize the total throughput. In the simulations, the
+proportional fair strategy outperforms resource fair in
+terms of throughput as well as fairness thereby resulting
+in a good tradeoff between throughput and fairness.
+Further details about the implemented schedulers, as
+well as more simulation results, can be found in [21].
+The presented simulation results can be reproduced
+by calling the script Reproducibility_Schedulers_batch.m
+that can be found in the directory “paper scripts” of the
+link level and the system level simulator, respectively.
+More examples of the Vienna LTE simulators also in
+the context of LTE-Advanced are presented in [74].
+6. Conclusions
+In this paper, we presented the Vienna LTE Simulators,
+consisting of a link level and a system level simulator.
+Both simulators are available under a non-commercial
+open source academic-use license and thereby enable
+researchers to implement and test algorithms in the
+context of LTE. The open source availability of the
+simulators facilitates researchers to reproduce published
+results in the context of LTE, and thus supports the
+comparison of novel algorithms with previous state-of-
+the-art. So far (July 2011), the simulators have been
+downloaded more than 18,000 times from all over the
+world.
+Endnotes
+aNote that the scheduler in a multi-user system will
+change the statistics of the individual user’s channel,
+thus influencing the receiver performance. bAfter all, the
+purpose of a simulation model is to abstract and thus
+simplify complex situations.c http://www.nt.tuwien.ac.at/
+forum and http://www.nt.tuwien.ac.at/forum.
+Abbreviations
+3GPP: third generation partnership project; AMC: adaptive modulation and
+coding; ARQ: automatic repeat request; AWGN: additive white Gaussian
+noise; BER: bit error ratio; BLER: block error ratio; CDF: cumulative density
+function; CDMA: code-division multiple access; CoMP: cooperative multi-
+point; CPICH: common pilot channel; CQI: channel quality indicator; CRC:
+cyclic redundancy check; CSI: channel state information; DoF: degrees of
+freedom; D-TxAA: double transmit antenna array; ECR: effective code rate;
+EESM: exponential effective SINR mapping; FDD: frequency division duplex;
+FFT: fast fourier transform; GSM: global system for mobile communications;
+HSDPA: high-speed downlink packet access; HSPA: high-speed packet access;
+HS-DPCCH: high-speed dedicated physical control channel; HSDSCH: high-
+speed downlink shared channel; HS-PDSCH: high-speed physical downlink
+shared channel; HS-SCCH: high-speed shared control channel; HSUPA: high-
+speed uplink packet access; IMS: IP multimedia subsystem; ICI: inter carrier
+interference; ISI: inter symbol interference; ITU: international
+telecommunication union; LEP: link error prediction; LTE-A: LTE advanced;
+LMMSE: linear minimum mean squared error; MAC-hs: medium access
+control for HSDPA; MCS: modulation and coding scheme; MIESM: mutual
+information effective SINR mapping; MIMO: multiple-input multiple-output;
+MU-MIMO: multi-User MIMO; MVU: minimum variance unbiased; NACK: non-
+acknowledged; PCI: precoding control information; PMI: precoding matrix
+indicator; PedA: pedestrian A; PedB: pedestrian B; RAN: radio access network;
+RB: resource block; RI: rank indicator; ROI: region of interest; RLC: radio link
+control; RRC: radio resource control; UE: user equipment; OFDMA:
+round robin
+maxmin
+res. fair
+prop. fair
+best CQI
+25
+20
+15
+10
+5
+0
+scheduler
+mean throughput [Mbit/s]
+system level
+link level
+Figure 11 Comparison of system throughput obtained with
+different scheduling strategies with link and system level
+simulations. Reproducible by running
+Reproducibility_Schedulers_batch.m.
+1
+0.8
+0.6
+0.4
+0.2
+0
+Jain’s fairness index
+scheduler
+round robin
+maxmin
+res. fair
+prop. fair
+best CQI
+system level
+link level
+Figure 12 Comparison of fairness obtained with different
+scheduling strategies with link and system level simulations.
+Reproducible by running Reproducibility_Schedulers_batch.m.
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 12 of 14
+
+--- PAGE 13 ---
+orthogonal frequency division multiple access; OFDM: orthogonal frequency
+division multiplexing; PDP: power delay profile; SAE: system architecture
+evolution; SCM: spatial channel model; SISO: single-input single-output; SM:
+spatial multiplexing; SINR: signal to interference and noise ratio; SNR: signal-
+to-noise ratio; SQP: sequential quadratic programming; ST-MMSE: space-time
+MMSE; SU single user; TB: transport block; TBS: transport block size; TTI:
+transmission time interval; TxAA: transmit antenna array; UMTS: universal
+mobile telecommunications system; UTRA: UMTS terrestrial radio access;
+WCDMA: wideband CDMA; ZF: zero-forcing.
+Acknowledgements
+This work has been funded by the Christian Doppler Laboratory for Wireless
+Technologies for Sustainable Mobility, KATHREIN-Werke KG, and A1 Telekom
+Austria AG. The financial support by the Federal Ministry of Economy, Family
+and Youth and the National Foundation for Research, Technology and
+Development is gratefully acknowledged. The authors would like to thank
+Christoph F. Mecklenbräuker for his valuable comments and fruitful
+discussions.
+Competing interests
+The authors declare that they have no competing interests
+Received: 5 November 2010 Accepted: 25 July 2011
+Published: 25 July 2011
+References
+1.
+M Barni, F Perez-Gonzalez, Pushing science into signal processing. IEEE
+Signal Process. Mag. 22(4), 120–119 (July 2005)
+2.
+P Vandewalle, J Kovačević, M Vetterli, Reproducible research in signal
+processing. IEEE Signal Process. Mag. 26(3), 37–47 (May 2009)
+3.
+M Dohler, R Heath Jr, A Lozano, CB Papadias, RA Valenzuela, Is the PHY
+layer dead?. IEEE Communications Magazine, 4, 159–165 (Apr. 2011)
+4.
+JB Buckheit, DL Donoho, Wavelab and reproducible research. Dept. of
+Statistics, Stanford Univ., Tech. Rep. 474, Tech. Rep, http://www-stat.stanford.
+edu/~donoho/Reports/1995/wavelab.pdf (1995)
+5.
+P Vandewalle, S Süsstrunk, M Vetterli, A frequency domain approach to
+registration of aliased images with application to super-resolution. EURASIP
+Journal on Applied Signal Processing, 2006 (2006). Article ID 71459
+6.
+C Mehlführer, S Caban, M Rupp, Experimental evaluation of adaptive
+modulation and coding in MIMO WiMAX with limited feedback. EURASIP
+Journal on Advances in Signal Processing, Special Issue on MIMO Systems with
+Limited Feedback, 2008 (2008). Article ID 837102
+7.
+M Šimko, D Wu, C Mehlführer, J Eilert, D Liu, Implementation Aspects of
+Channel Estimation for 3GPP LTE Terminals, in Proc. European Wireless
+(EW 2011), Vienna, Austria (Apr. 2011)
+8.
+R Dallinger, H Ruotsalainen, R Wichman, M Rupp, Adaptive pre-distortion
+techniques based on orthogonal polynomials, in Conference Record of the
+44th Asilomar Conference on Signals, Systems and Computers, Pacific Grove
+(CA), USA (Nov. 2010)
+9.
+Technical Specification Group RAN, E-UTRA; LTE physical layer - general
+description. 3GPP, Tech. Rep. TS 36.201 Version 8.3.0 (March 2009)
+10.
+C Williams, S McLaughlin, MA Beach, Exploiting multiple antennas for
+synchronization. IEEE Trans. Veh. Technol. 58(2), 773–787 (Feb. 2009)
+11.
+Q Wang, S Caban, C Mehlführer, M Rupp, Measurement based throughput
+evaluation of residual frequency offset compensation in WiMAX, in Proc.
+51st International Symposium ELMAR-2009, Zadar, Croatia pp. 233–236
+(Sept. 2009)
+12.
+N Kolehmainen, J Puttonen, P Kela, T Ristaniemi, T Henttonen, M Moisio,
+Channel quality indication reporting schemes for UTRAN long term
+evolution downlink, in Proc. IEEE Vehicular Technology Conference Spring
+(VTC), pp. 2522–2526 (May 2008)
+13.
+S Schwarz, C Mehlfuhrer, M Rupp, Calculation of the spatial preprocessing
+and link adaption feedback for 3GPP UMTS/LTE, in Proc. IEEE Wireless
+Advanced,” London, UK (June 2010)
+14.
+L Boher, R Legouable, R Rabineau, Performance analysis of iterative receiver
+in 3GPP/LTE DL MIMO OFDMA system, in Proc. IEEE 10th International
+Symposium on Spread Spectrum Techniques and Applications (ISSSTA), pp.
+103–108 (Aug. 2008)
+15.
+M Wrulich, M Rupp, Performance and modeling of LTE H-ARQ, in Proc.
+International ITG Workshop on Smart Antennas (WSA 2009), Berlin, Germany
+(Feb. 2009)
+16.
+M Wrulich, M Rupp, Computationally efficient MIMO HSDPA system-level
+modeling. EURASIP Journal on Wireless Communications and Networking,
+2009 (2009). Article ID 382501
+17.
+TM Cover, Comments on broadcast channels. IEEE Trans. Inf. Theory. 44(6),
+2524–2530 (Oct. 1998). doi:10.1109/18.720547
+18.
+H Weingarten, Y Steinberg, S Shamai, The capacity region of the gaussian
+multiple-input multiple-output broadcast channel. IEEE Trans. Inf. Theory.
+52(9), 3936–3964 (Sept. 2006)
+19.
+U Niesen, P Gupta, D Shah, The balanced unicast and multicast capacity
+regions of large wireless networks. IEEE Trans. Inf. Theory. 56(5), 2249–2271
+(May 2010)
+20.
+D Skoutas, D Komnakos, D Vouyioukas, A Rouskas, Enhanced dedicated
+channel scheduling optimization in WCDMA, in Proc. 14th European Wireless
+Conference (EW) (June 2008)
+21.
+S Schwarz, C Mehlführer, M Rupp, Low complexity approximate maximum
+throughput scheduling for LTE, in Conference Record of the 44th Asilomar
+Conference on Signals, Systems and Computers, Pacific Grove, CA, USA
+(Nov. 2010)
+22.
+K Peppas, T Al-Gizawi, F Lazarakis, D Axiotis, A Moussa, A Alexiou, System
+level evaluation of reconfigurable MIMO techniques enhancements for
+HSDPA, in Proc. IEEE Global Telecommunications Conference (GLOBECOM). 5,
+2869–2873 (2004)
+23.
+P Gkonis, D Kaklamani, G Tsoulos, Capacity of WCDMA multicellular networks
+under different radio resource management strategies, in Proc. 3rd International
+Symposium on Wireless Pervasive Computing (ISWPC), pp. 60–64 (2008)
+24.
+M Castañeda, M Ivrlac, J Nossek, I Viering, A Klein, On downlink intercell
+interference in a cellular system, in Proc. IEEE 18th International
+Symposium on Personal, Indoor and Mobile Radio Communications (PIMRC),
+pp. 1–5 (2007)
+25.
+T Nihtila, V Haikola, HSDPA MIMO system performance in macro cell
+network, in Proc. IEEE Sarnoff Symposium (2008)
+26.
+KI Pedersen, TF Lootsma, M Stottrup, F Frederiksen, T Kolding, PE
+Mogensen, Network performance of mixed traffic on high speed downlink
+packet access and dedicated channels in WCDMA, in Proc. IEEE 60th
+Vehicular Technology Conference (VTC). 6, 4496–4500 (2004)
+27.
+SA Jafar, MJ Fakhereddin, Degrees of freedom for the MIMO interference
+channel. IEEE Trans. Inf. Theory. 53(7), 2637–2642 (July 2007)
+28.
+Nortel, Performance evaluation of CL MIMO under different UE speed. 3rd
+Generation Partnership Project (3GPP), Tech. Rep. R1-080384 (Jan. 2008)
+29.
+Nokia & Nokia-Siemens-Networks, LTE performance benchmarking. 3rd
+Generation Partnership Project (3GPP), Tech. Rep. R1- 071960 (Apr. 2007)
+30.
+steepest ascent, 3GPP LTE toolbox and blockset, (2009)
+31.
+mimoOn, mi!mobile, (2009)
+32.
+Aricent, LTE layer 1 - LTE baseband/PHY library, (2009)
+33.
+JJ Sánchez, G Gómez, D Morales-Jiménez, JT Entrambasaguas, Performance
+evaluation of OFDMA wireless systems using WM-SIM platform, in Proc.
+ACM 4th International Workshop on Mobility Management and Wireless
+Access (MobiWac), pp. 131–134 (2006)
+34.
+C Mehlführer, M Wrulich, JC Ikuno, D Bosanska, M Rupp, Simulating the
+long term evolution physical layer, in Proc. 17th European Signal Processing
+Conference (EUSIPCO 2009) Glasgow, Scotland, UK, pp. 1471–1478
+(Aug. 2009)
+35.
+JC Ikuno, M Wrulich, M Rupp, System level simulation of LTE networks, in
+Proc. 2010 IEEE 71st Vehicular Technology Conference (VTC2010-Spring),”
+Taipei, Taiwan (May 2010)
+36.
+Technical Specification Group RAN, E-UTRA; physical channels and
+modulation. 3GPP, Tech. Rep. TS 36.211 Version 8.7.0 (May 2009)
+37.
+Technical Specification Group RAN, E-UTRA; multiplexing and channel
+coding. 3GPP, Tech. Rep. TS 36.212 (March 2009)
+38.
+Technical Specification Group RAN, E-UTRA; physical layer procedures. 3GPP,
+Tech. Rep. TS 36.213 (March 2009)
+39.
+X Wang, G Giannakis, A Marques, A unified approach to QoS-guaranteed
+scheduling for channel-adaptive wireless networks, in Proceedings of the
+IEEE. 95(12), 2410–2431 (Dec. 2007)
+40.
+CL Raymond Kwan, J Zhang, Multiuser scheduling on the downlink of an
+LTE cellular system. Research Letters in Communications. 2008 (2008). Article
+ID 323048
+41.
+S Schwarz, C Mehlführer, M Rupp, Throughput maximizing multiuser
+scheduling with adjustable fairness, in Proc. IEEE International Conference on
+Communications (ICC 2011), Kyoto, Japan (May 2011)
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 13 of 14
+
+--- PAGE 14 ---
+42.
+Members of ITU, Recommendation ITU-R M.1225: Guidelines for evaluation
+of radio transmission technologies for IMT-2000. International
+Telecommunication Union (ITU), Tech. Rep (1997)
+43.
+L Hentilä, P Kyösti, M Kaske, M Narandzic, M Alatossava, MATLAB
+implementation of the WINNER phase ii channel model ver1.1, http://www.
+ist-winner.org/phase_2_model.html (Dec. 2007)
+44.
+M Šimko, C Mehlführer, M Wrulich, M Rupp, Doubly dispersive channel
+estimation with scalable complexity, in Proc. International ITG Workshop on
+Smart Antennas (WSA 2010), Bremen, Germany, pp. 251–256 (Feb. 2010)
+45.
+Q Wang, C Mehlführer, M Rupp, Carrier frequency synchronization in the
+downlink of 3GPP LTE, in Proc. 21st Annual IEEE International Symposium on
+Personal, Indoor and Mobile Radio Communications (PIMRC 2010), Istanbul,
+Turkey (Sept. 2010)
+46.
+M Šimko, C Mehlführer, T Zemen, M Rupp, Inter carrier interference
+estimation in MIMO OFDM systems with arbitrary pilot structure, in Proc.
+73rd IEEE Vehicular Technology Conference (VTC2011-Spring), Budapest,
+Hungary (May 2011)
+47.
+I Solutions, Iterative Solutions Coded Modulation Library (ISCML), http://
+www.iterativesolutions.com/
+48.
+T Pircher, pycrc CRC calculator and C source code generator, http://www.
+tty1.net/pycrc/
+49.
+Q Wang, C Mehlführer, M Rupp, SNR optimized residual frequency offset
+compensation for WiMAX with throughput evaluation, in Proc. 17th
+European Signal Processing Conference (EUSIPCO 2009), Glasgow, Scotland,
+UK (Aug. 2009)
+50.
+JC Ikuno, C Mehlführer, M Rupp, A novel link error prediction model for
+OFDM systems with HARQ, in Proc. IEEE International Conference on
+Communications (ICC 2011), Kyoto, Japan (May 2011)
+51.
+M Wrulich, S Eder, I Viering, M Rupp, Efficient link-to-system level model for
+MIMO HSDPA, in Proc. of the 4th IEEE Broadband Wireless Access Workshop,”
+New Orleans, LA, USA (Dec. 2008)
+52.
+C Mehlführer, M Wrulich, M Rupp, Intra-cell interference aware equalization
+for TxAA HSDPA, in Proc. 3rd IEEE International Symposium on Wireless
+Pervasive Computing (ISWPC 2008), Santorini, Greece, pp. 406–409
+(May 2008)
+53.
+A Ibing, V Jungnickel, Joint transmission and detection in hexagonal grid
+for 3GPP LTE, in Proc. International Conference on Information Networking
+2008 (ICOIN 2008) (Jan. 2008)
+54.
+V Cadambe, S Jafar, Interference alignment and degrees of freedom of the
+K-user interference channel. IEEE Trans. Inf. Theory. 54(8), 3425–3441
+(Apr. 2008)
+55.
+R Tresch, M Guillaud, Cellular interference alignment with imperfect channel
+knowledge, in IEEE International Conference on Communications Workshops
+2009 (ICC Workshops 2009) (June 2009)
+56.
+P Wu, N Jindal, Performance of hybrid-ARQ in block-fading channels: A
+fixed outage probability analysis. IEEE Transactions on Communications.
+58(4), 1129–1141 (Apr. 2010)
+57.
+Y Blankenship, P Sartori, B Classon, V Desai, K Baum, Link error prediction
+methods for multicarrier systems, in Proc. IEEE 60th Vehicular Technology
+Conference (VTC2004-Fall). 6, 4175–4179 (Sept. 2004)
+58.
+Technical Specification Group RAN, E-UTRA; LTE RF system scenarios. 3GPP,
+Tech. Rep. TS 36.942 (2008)
+59.
+T Zemen, C Mecklenbräuker, Time-variant channel estimation using discrete
+prolate spheroidal sequences, in IEEE Trans. Signal Process. 53(9), 3597–3607
+(Sept. 2005)
+60.
+J Kim, A Ashikhmin, A van Wijngaarden, E Soljanin, N Gopalakrishnan, On
+efficient link error prediction based on convex metrics, in Proc. IEEE 60th
+Vehicular Technology Conference (VTC2004-Fall). 6, 4190–4194 (Sept. 2004)
+61.
+S Tsai, A Soong, Effective-SNR mapping for modeling frame error rates in
+multiple-state channels. 3GPP2, Tech. Rep. 3GPP2-C30-20030429-010
+(Apr. 2003)
+62.
+L Wan, S Tsai, M Almgren, A fading-insensitive performance metric for a
+unified link quality model, in Proc. IEEE Wireless Communications and
+Networking Conference (WCNC2006). 4, 2110–2114 (Apr. 2006)
+63.
+Technical Specification Group RAN, Physical layer aspects for E-UTRA. 3GPP,
+Tech. Rep. TS 25.814 (2006)
+64.
+H Claussen, Efficient modelling of channel maps with correlated shadow
+fading in mobile radio systems, in Proc. IEEE 16th International Symposium
+on Personal, Indoor and Mobile Radio Communications (PIMRC2005). 1,
+512–516 (Sept. 2005)
+65.
+Technical Specification Group RAN, Evolved universal terrestrial radio access
+(E-UTRA); user equipment (UE) radio transmission and reception. 3GPP,
+Tech. Rep. TS 36.101 Version 8.5.1 (Mar. 2009)
+66.
+A Paulraj, R Nabar, D Gore, Introduction to Space-Time Wireless
+Communications, 1st edn. (Cambridge Univ. Press, 2003)
+67.
+Y Feng, A Krewski, WL Schroeder, Simulation based comparison of metrics
+and measurement methodologies for OTA test of MIMO terminals, in Proc.
+of the Fourth European Conference on Antennas and Propagation (EuCAP
+2010) (Apr. 2010)
+68.
+VH Muntean, M Otesteanu, G-M Muntean, QoS parameters mapping for the
+e-learning traffic mix in LTE networks, in Proc. International Joint Conference
+on Computational Cybernetics and Technical Informatics (ICCC-CONTI 2010),
+pp. 299–304 (May. 2010)
+69.
+D Wu, J Eilert, R Asghar, D Liu, VLSI implementation of a fixed-complexity
+soft-output MIMO detector for high-speed wireless. EURASIP Journal on
+Wireless Communications and Networking. 2010 (2010). Article ID 893184
+70.
+C Mehlführer, S Caban, M Rupp, Measurement-based performance
+evaluation of MIMO HSDPA. IEEE Transactions on Vehicular Technology,
+accepted for publication
+71.
+B Badic, M Rupp, H Weinrichter, Adaptive channel-matched extended
+alamouti space-time code exploiting partial feedback. ETRI Journal. 26(5),
+443–451 (2004). doi:10.4218/etrij.04.0703.0006
+72.
+M Rupp, C Mehlführer, S Caban, On achieving the Shannon bound in
+cellular systems, in Proc. 20th International Conference Radioelektronika 2010,”
+Brno, Czech Republik (Apr. 2010)
+73.
+R Jain, D Chiu, W Hawe, A Quantitative Measure of Fairness and
+Discrimination for Resource Allocation in Shared Computer Systems. DEC,
+Tech. Rep. TR-301 (Sept. 1984)
+74.
+S Caban, C Mehlführer, M Rupp, M Wrulich, Evaluation of HSDPA and LTE,
+From Testbed Measurements to System Level Performance, Wiley, (2011)
+75.
+3GPP, Technical Specification Group Radio Access Networks; Deployment
+aspects (Release 8), http://www.3gpp.org/ftp/Specs/html-info/25943.htm
+(Dec. 2008)
+76.
+Technical Specification Group Radio Access Network, Deployment aspects
+(Release 8). 3GPP, Tech. Rep. TS 25.943 Version 8.0 (Dec. 2008)
+doi:10.1186/1687-6180-2011-29
+Cite this article as: Mehlführer et al.: The Vienna LTE simulators -
+Enabling reproducibility in wireless communications research. EURASIP
+Journal on Advances in Signal Processing 2011 2011:29.
+Submit your manuscript to a 
+journal and beneﬁ t from:
+7 Convenient online submission
+7 Rigorous peer review
+7 Immediate publication on acceptance
+7 Open access: articles freely available online
+7 High visibility within the ﬁ eld
+7 Retaining the copyright to your article
+    Submit your next manuscript at 7 springeropen.com
+Mehlführer et al. EURASIP Journal on Advances in Signal Processing 2011, 2011:29
+http://asp.eurasipjournals.com/content/2011/1/29
+Page 14 of 14

@@ -1,0 +1,38 @@
+# OFDM and Channel Configuration for ChannelNet
+ofdm:
+  num_subcarriers: 72       # NS = 72 subcarriers (6 LTE Resource Blocks)
+  num_symbols: 14           # ND = 14 OFDM symbols per subframe
+  carrier_frequency: 2.1e9  # 2.1 GHz carrier frequency
+  bandwidth: 1.6e6          # 1.6 MHz system bandwidth
+  subcarrier_spacing: 15000 # 15 kHz subcarrier spacing
+  sampling_rate: 1.92e6     # 1.92 MHz LTE baseband sampling rate (128-point FFT * 15 kHz)
+  fft_size: 128             # FFT size
+  cp_length: 9              # Cyclic prefix length in samples (~4.69 microseconds)
+  ue_speed_kmh: 50.0        # User Equipment speed (50 km/h)
+
+pilots:
+  primary_count: 48         # Primary pilot count per 72x14 frame
+  additional_counts: [24, 72] # Additional pilot densities evaluated
+  pilot_type: "lattice"     # Diamond / lattice-type arrangement
+  pilot_value: [1.0, 0.0]   # Complex pilot symbol (BPSK +1)
+
+channel_models:
+  - "VehA"                  # ITU-R Vehicular-A tapped delay line model
+  - "SUI5"                  # IEEE 802.16 SUI-5 long delay spread model
+
+dataset:
+  train_samples: 32000      # Paper specification: 32000 training channels
+  val_samples: 4000         # Paper specification: 4000 validation channels
+  test_samples: 4000        # Paper specification: 4000 test channels
+  training_snrs_db: [12.0, 22.0] # Required Deep Low-SNR (12 dB) and Deep High-SNR (22 dB)
+  eval_snrs_db: [0.0, 5.0, 10.0, 12.0, 15.0, 20.0, 22.0, 25.0]
+  seed: 42
+
+training:
+  batch_size: 128
+  learning_rate: 0.001
+  max_epochs: 50
+  optimizer: "adam"
+  sr_loss: "mse"
+  dncnn_loss: "mse"
+

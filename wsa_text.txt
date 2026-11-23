@@ -1,0 +1,806 @@
+--- PAGE 1 ---
+Doubly Dispersive Channel Estimation with
+Scalable Complexity
+Michal ˇSimko, Christian Mehlf¨uhrer, Martin Wrulich and Markus Rupp
+Institute of Communications and Radio-Frequency Engineering, Vienna University of Technology
+Gusshausstrasse 25/389, A-1040 Vienna, Austria
+Email: {msimko, chmehl, mwrulich, mrupp}@nt.tuwien.ac.at
+Web: http://www.nt.tuwien.ac.at/rapid-prototyping
+Abstract—In this paper, we present an Approximate Linear
+Minimum Mean Square Error (ALMMSE) fast fading chan-
+nel estimator for Orthogonal Frequency Division Multiplexing
+(OFDM). The ALMMSE channel estimator utilizes the knowl-
+edge of the structure of the autocorrelation matrix given by the
+Kronecker product between the time correlation matrix and the
+frequency correlation matrix. We separate the Linear Minimum
+Mean Square Error (LMMSE) ﬁltering matrix into two matrices
+corresponding to individual ﬁltering in frequency and time. The
+eigenvalues of these two matrices are rank-one approximated by
+the eigenvalues of the LMMSE ﬁltering matrix. The complexity
+of the ALMMSE estimator can be scaled by varying the number
+of the considered number of eigenvalues. Simulation results show
+that the proposed ALMMSE channel estimator looses only 0.1 dB
+compared to the LMMSE channel estimator in realistic scenarios.
+Index Terms—LTE, Channel Estimation, Fast Fading, OFDM.
+I. INTRODUCTION
+An essential part of modern wireless communications re-
+ceivers is the channel estimator whose quality has a direct
+impact on the data throughput. The complexity and imple-
+mentation of a channel estimator strongly depends on the
+statistics of the channel, in particular the coherence time. With
+a coherence time longer than the typical transmission timing
+interval, the channel appears as a block fading. In this case it
+is sufﬁcient to estimate the channel only once per transmission
+block. On the other hand, if the coherence time is smaller than
+the typical transmission timing interval, the channel appears as
+fast fading channel. Accordingly, the channel estimation has
+to adapt to this circumstance.
+The channel estimation for Orthogonal Frequency Division
+Multiplexing (OFDM) systems in case of block fading [1–
+4] is a well studied topic for certain pilot symbol structures.
+Exemplary estimator classes are the Least Squares (LS) and
+the Linear Minimum Mean Square Error (LMMSE) channel
+estimators, which for example have also been applied in Long
+Term Evolution (LTE) for Universal Mobile Telecommunica-
+tions System (UMTS) [5]. Today’s wireless communication
+systems however are designed to provide high data rates also
+to mobile users. The channel of a quickly moving user is
+changing rapidly during a subframe, rendering the channel
+coherence time small. Consequently, the utilization of block
+fading channel estimators would result in a signiﬁcant perfor-
+mance loss. A suitable estimator in a fast fading environment
+is the LMMSE fast fading channel estimator [6–8], which
+however suffers from high computational complexity. Further-
+more, the complexity of the proposed channel estimators is
+ﬁxed, independent of the actual requirements. In this work we
+discuss the performance of the standard channel estimators
+in case of the fast fading for LTE using the 3rd Generation
+Partnership Project (3GPP) standardized pilot symbol pattern.
+Furthermore, we propose an approximation of the LMMSE
+fast fading channel estimator with scalable complexity, which
+we call Approximate Linear Minimum Mean Square Error
+(ALMMSE) estimator.
+The paper is organized as follows. In Section II we describe
+the pilot symbol structure of the LTE standard and the mathe-
+matical system model. State-of-the-art channel estimator, such
+as the LS for block fading, the LS for fast fading and the
+LMMSE for fast fading, are presented in Section III. We
+introduce our ALMMSE fast fading channel estimator in
+Section IV. In Section V we evaluate the performance of
+the explained channel estimators in terms of physical layer
+data throughput and Mean Square Error (MSE). Finally, we
+conclude the paper in Section VI.
+II. SYSTEM MODEL
+In this section, the structure of the pilot symbols for 3GPP
+LTE is described. In the time domain, the LTE signal consists
+of frames with a duration of Tframe = 10 ms. Each frame
+is split into ten equally long subframes and each subframe
+into two equally long slots with a duration of Tslot = 0.5 ms.
+Depending on the cyclic preﬁx length, being either extended
+or normal, each slot consists of Ns = 6 or Ns = 7 OFDM
+symbols, respectively. In LTE, the subcarrier spacing is ﬁxed
+to 15 kHz. Twelve adjacent subcarriers of one slot are grouped
+into a so-called resource block. The number of resource blocks
+in an LTE slot ranges from 6 up to 100, corresponding to a
+bandwidth from 1.4 MHz up to 20 MHz.
+The positions of the pilot symbols in the time-frequency
+grid depend on the number of transmit antenna ports [9].
+Whenever there is a pilot symbol located within the time-
+frequency grid at one transmit antenna port, this position on
+the remaining transmit antenna ports is not used. We call the
+2010 International ITG Workshop on Smart Antennas (WSA 2010)
+978-1-4244-6072-4/10/$26.00 ©2010 IEEE
+251
+Authorized licensed use limited to: International Institute of Information Technology Bangalore. Downloaded on November 09,2026 at 13:40:44 UTC from IEEE Xplore.  Restrictions apply. 
+
+--- PAGE 2 ---
+Antenna port 1
+Antenna port 2
+Antenna port 3
+Antenna port 4
+frequency
+time
+frequency
+frequency
+frequency
+time
+time
+time
+Fig. 1.
+Structure of the pilot symbols within one resource block if four
+transmit antenna ports and normal cyclic preﬁx are employed
+corresponding symbols zero-symbols in the following. Figure 1
+depicts the structure of the pilot symbols within one resource
+block if four transmit antenna ports and normal cyclic preﬁx
+are employed. The colored squares correspond to the pilot
+symbols at a particular antenna port and crosses correspond
+to the zero-symbols. Each resource block at the 1st and the
+2nd transmit antenna port contains four pilot symbols. At the
+3rd and 4th transmit antenna port just two pilot symbols are
+available per resource block. It is obvious that with increasing
+number of antenna ports, the overhead for pilot symbols and
+zero-symbols is increasing. This fact results in decreasing
+spectral efﬁciency with increasing number of transmit antenna
+ports; that is, in case of four transmit antenna ports 14.3%
+of all symbols are reserved just for channel estimation. The
+applied pilot symbol pattern allows to estimate a Multiple
+Input Multiple Output (MIMO) channel as independent Single
+Input Single Output (SISO) channels, if spatial correlation is
+neglected or assumed to be low.
+The n-th received OFDM symbol yn at one receive antenna
+port can be written as
+yn = Xnhn + wn,
+(1)
+where the vector hn contains the channel coefﬁcients in
+the frequency domain and wn is additive white zero mean
+Gaussian noise with variance σ2
+w. The diagonal matrix Xn =
+diag (xn) comprises the data symbols xd,n and the pilot
+symbols xp,n permuted by a permutation matrix P on the
+main diagonal
+xn = P
+
+xT
+p,n xT
+d,n
+T .
+(2)
+The length of the vector xn is K corresponding to the
+number of subcarriers. Note that according to Equation (2),
+also the vectors yn, hn and wn can be divided into two parts
+corresponding to the pilot symbol positions and to the data
+symbol positions.
+III. STATE-OF-THE-ART CHANNEL ESTIMATION
+In this section, we present three typical state-of-the-art
+channel estimators that are used as a benchmark for our novel
+ALMMSE channel estimator introduced in the next section.
+A. LS Channel Estimation
+The LS channel estimator [1] for the pilot symbol positions
+is given as the solution to the minimization problem
+ˆhLS
+p
+= arg min
+ˆhp
+yp −Xp ˆhp
+
+2
+2 = X−1
+p
+yp.
+(3)
+At the non-pilot symbol positions, the remaining channel coef-
+ﬁcients have to be obtained by two dimensional interpolation.
+In this work, we use linear interpolation. The LS channel
+estimator does not require knowledge about the channel and
+noise statistics and can be implemented with low complexity.
+In case block fading is assumed, the LS channel estimator
+can be simpliﬁed even further. First, the channel estimates for
+time-frequency grid positions with pilot symbols are calculated
+by using Equation (3). Utilizing the assumption that the chan-
+nel stays constant during the transmission of one subframe,
+the pilot positions channel estimates at different points in
+time can be averaged. The remaining channel coefﬁcients
+in the frequency domain then have to be obtained by only
+one dimensional interpolation. In this work, we use linear
+interpolation.
+B. LMMSE Channel Estimation
+The LMMSE channel estimator requires the second order
+statistics of the channel and the noise. It can be shown that
+the LMMSE channel estimate is obtained by multiplying the
+LS estimate with a ﬁltering matrix ALMMSE [5]
+ˆhLMMSE = ALMMSEˆhLS
+p .
+(4)
+In order to ﬁnd the LMMSE ﬁltering matrix, the MSE
+ϵ = E
+h −ALMMSEˆhLS
+p
+
+2
+2
+
+,
+(5)
+has to be minimized, leading to
+ALMMSE = Rh,hp
+
+Rhp,hp + σ2
+wI
+−1 ,
+(6)
+where the matrix Rhp,hp = E
+	
+hphH
+p
+
+is the channel au-
+tocorrelation matrix at the pilot symbols, and the matrix
+Rh,hp = E
+	
+hhH
+p
+
+is the channel crosscorrelation matrix.
+IV. ALMMSE CHANNEL ESTIMATION
+In the following section, we present a novel fast fading
+channel estimator, which approximates the LMMSE channel
+estimator. The main idea is to make use of the structure of the
+channel autocorrelation matrix, assumed to be given by
+Rh ≜Rtime ⊗Rfreq,
+(7)
+where Rtime is the time correlation matrix and Rfreq is the
+frequency correlation matrix. The Kronecker structure assump-
+tion of the channel autocorrelation matrix Rh corresponds to
+independent time- and frequency-correlation.
+252
+Authorized licensed use limited to: International Institute of Information Technology Bangalore. Downloaded on November 09,2026 at 13:40:44 UTC from IEEE Xplore.  Restrictions apply. 
+
+--- PAGE 3 ---
+The standard LMMSE estimate is obtained by minimizing
+the error in Equation (5). Let us consider the following
+problem instead
+min
+Bfreq,Ctime E
+
+∥H −Bfreq ˆHLSCT
+time∥2
+F
+
+,
+(8)
+with the channel H = [h0, · · · , hNs−1] and the LS channel
+estimate ˆHLS = [ˆhLS
+0 , · · · , ˆhLS
+Ns−1]. Here, Ns denotes the
+number of OFDM symbols, Bfreq and Ctime are matrices of
+dimension K×K and Ns×Ns, respectively. ∥·∥F refers to the
+Frobenius norm. The approach in Equation (8) corresponds to
+a separate ﬁltering of the LS estimate in time and frequency.
+After applying the vec(·) operator [10] in Equation (8) by
+using h = vec (H), ˆhLS = vec
+
+ˆHLS
+
+, and
+vec
+
+Bfreq ˆHLSCT
+time
+
+= (Ctime ⊗Bfreq) vec
+
+ˆHLS
+
+, (9)
+we obtain
+min
+Bfreq,Ctime E
+
+∥h −(Ctime ⊗Bfreq) ˆhLS∥2
+2
+
+.
+(10)
+The problems formulated in Equation (5) and Equation (10)
+are equivalent. However, in general ALMMSE cannot always
+be decomposed into Ctime ⊗Bfreq. Instead, we are searching
+for the best approximation
+ALMMSE ≈Ctime ⊗Bfreq.
+(11)
+Due to the pilot symbols pattern utilized in LTE, that is
+not equidistant in the time and frequency, the structure from
+Equation (7) cannot be exploited in Rhp,hp and Rh,hp.
+Therefore, we replace the auto- and crosscorrelation matrices
+in Equation (6) by the channel autocorrelation matrix Rh.
+Therefore, instead of ﬁltering the LS estimate at the pilot
+symbols position, the interpolated LS estimate has to be
+ﬁltered. The dimension of ﬁltering matrix in Equation (6)
+is changed from KNs × Np to KNs × KNs, where Np
+is the number of the pilot symbols. In the Signal to Noise
+Ratio (SNR) range of interest, such an estimator performs
+close to the true LMMSE channel estimator. For pilot symbol
+pattern that is equidistant in time frequency, the structure from
+Equation (7) can be exploited. Using Equations (6) and (7),
+the matrix ALMMSE is given by
+ALMMSE = Rtime ⊗Rfreq
+
+Rtime ⊗Rfreq + σ2
+wI
+−1 . (12)
+The symmetric matrices Rtime and Rfreq can be rewritten
+using the eigenvalue decomposition as
+Rtime = UtimeDtimeUH
+time,
+Rfreq = UfreqDfreqUH
+freq,
+where Dtime and Dfreq are diagonal matrices, with their
+corresponding eigenvalues ordered from largest to smallest on
+the main diagonal. Utime and Ufreq are unitary matrices com-
+prising the eigenvectors of the given matrices. Furthermore,
+due to the Kronecker product properties, one can write
+Rtime ⊗Rfreq = (Utime ⊗Ufreq) Dh (Utime ⊗Ufreq)H ,
+where Dh is a diagonal matrix with eigenvalues of the matrix
+Rtime⊗Rfreq, being equal to Dtime⊗Dfreq. Inserting the last
+equation into Equation (12) and after some linear algebra, the
+ﬁltering matrix becomes
+ALMMSE =
+(Utime ⊗Ufreq) Dh
+
+Dh + σ2
+wI
+−1 (Utime ⊗Ufreq)H .
+A. Rank-One Approximation
+Let us assume that Bfreq and Ctime have the same eigen-
+vectors as Rfreq and Rtime. Then Equation (11) can be
+approximated by
+ALMMSE =
+UhDh
+
+Dh + σ2
+wI
+−1 UH
+h ≈UhDCtime⊗BfreqUH
+h,
+(13)
+with Uh = Utime ⊗Ufreq. The matrix DCtime⊗Bfreq is
+a diagonal matrix comprising the eigenvalues of the matrix
+Ctime ⊗Bfreq.
+Moreover, let λtime, λfreq, λCtime and λBfreq denote the
+vectors of the eigenvalues of Rtime, Rfreq, Ctime and Bfreq,
+respectively. By multiplying λtime with λT
+freq, a matrix is
+obtained that comprises all possible multiplications of the
+elements of the vectors, and thus the eigenvalues of the
+matrix Rtime ⊗Rfreq. To solve the approximation problem
+DCtime⊗Bfreq ≈Dh
+
+Dh + σ2
+wI
+−1, the eigenvalues of the
+matrix Ctime ⊗Bfreq have to be found. Those represent all
+possible multiplications of the eigenvalues of the matrices
+Ctime and Bfreq, given by λCtimeλT
+Bfreq. Using the matrices
+λtimeλT
+freq and λCtimeλT
+Bfreq, the problem can be reformulated
+as
+λtimeλT
+freq./
+
+λtimeλT
+freq + σ2
+w11T
+≈λCtimeλT
+Bfreq,
+(14)
+where 1 is the all ones vector and ./ denotes element-wise
+division. This is a so-called rank-one approximation, where
+the best approximation is achieved when taking the left and
+right eigenvectors corresponding to the largest singular value,
+and having one of them scaled by it
+λCtime = σmaxumax,
+(15)
+λBfreq = vmax.
+(16)
+Accordingly, the ALMMSE channel estimate utilizing the
+rank-one approximation of Equation (14) is given by
+ˆHALMMSE = Bfreq ˆHLSCT
+time,
+(17)
+where the matrices Bfreq and Ctime are given by
+Bfreq = Ufreqdiag
+
+λBfreq
+
+UH
+freq,
+(18)
+Ctime = Utimediag
+
+λCtime
+
+UH
+time.
+(19)
+B. Complexity Scaling
+By utilizing the truncated Singular Value Decomposition
+(SVD) [11] on Rtime and Rfreq, Ntime and Nfreq largest
+eigenvalues can be obtained, respectively. By using Equa-
+tion (14), the vectors λCtime and λBfreq of length Ntime and
+253
+Authorized licensed use limited to: International Institute of Information Technology Bangalore. Downloaded on November 09,2026 at 13:40:44 UTC from IEEE Xplore.  Restrictions apply. 
+
+--- PAGE 4 ---
+TABLE I
+SIMULATOR SETTINGS FOR FAST FADING SIMULATIONS
+Parameter
+Value
+Bandwidth
+1.4 MHz
+Number of transmit antennas
+4
+Number of receive antennas
+2
+Receiver type
+SSD
+Transmission mode
+Open-loop spatial multiplexing
+Channel type
+ITU VehA [13]
+CQI
+10
+coding rate
+466/1024 = 0.455
+symbol alphabet
+64 QAM
+number of subframes
+2000
+Nfreq are calculated. The matrices Bfreq and Ctime are the
+same as if they would be calculated by
+Bfreq = (Ufreq)1:Nfreq diag
+
+λBfreq
+
+(Ufreq)H
+1:Nfreq ,
+(20)
+Ctime = (Utime)1:Ntime diag
+
+λCtime
+
+(Utime)H
+1:Ntime , (21)
+where (·)1:N creates a matrix, which consists of the ﬁrst N
+columns of the matrix. The main complexity is given by the
+truncated SVD. Therefore, by varying Ntime and Nfreq the
+complexity can be scaled according to the requirements.
+V. SIMULATION RESULTS
+In this section, we present simulation results and discuss
+the performance of the different channel estimation tech-
+niques. All results are obtained with the LTE Link Level
+Simulator version ”1.2r533”, developed at the Vienna Uni-
+versity of Technology [12], that can be downloaded from
+www.nt.tuwien.ac.at/ltesimulator.1 We also calculated the 95%
+conﬁdence intervals for all simulated curves. All intervals
+turned out to be smaller than the size of the markers plotted
+in the ﬁgures. Table I presents the most important simulator
+settings.
+The time correlated channel was generated by an im-
+plementation of the Rosa Zheng model with modiﬁcations
+according to [14]. We generate a time correlated channel
+impulse response for every sample of the baseband transmit
+signal. Using a time-variant convolution the output signal of
+the channel is calculated.
+In the following simulations, we ﬁxed Nfreq = 5 and
+Ntime = 2 to reduce the complexity of the ALMMSE fast
+fading channel estimator. In Figure 2 the throughput of the
+LTE system at SNR = 20 dB is plotted with different channel
+estimators as a function of user velocity. It can be observed
+that with increasing velocity the throughput is decreasing. The
+LMMSE estimator outperforms the remaining channel estima-
+tors. Up to a certain velocity of about v = 175 km/h, the
+performance of the proposed ALMMSE channel estimator is
+close to the LMMSE estimator. After exceeding this velocity,
+the energy of the time correlation is spread over more than two
+eigenvalues, therefore the performance is suffering. However,
+a user is able to move 25 km/h faster while achieving the same
+1All ﬁgures can be obtained by running a script ﬁle with name
+LTE sim batch michal wsa 2010
+0
+50
+100
+150
+200
+250
+300
+350
+0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+4.5
+5.0
+User speed [km/h]
+Throughput [Mbit/s]
+ 
+ 
+PERFECT
+LMMSE
+ALMMSE
+LS
+LS block
+Fig. 2.
+Comparison of the throughput of the LTE system with different
+channel estimators over user velocity.
+0
+50
+100
+150
+200
+250
+300
+350
+10-4
+10-3
+10-2
+10-1
+100
+User speed [km/h]
+MSE
+ 
+ 
+LMMSE
+ALMMSE
+LS
+LS block
+Fig. 3.
+Comparison of the MSE of the LTE system with different channel
+estimators over user velocity.
+data throughput, if the ALMMSE estimator is utilized instead
+of the LS estimator.
+When the LMMSE channel estimator is employed, the
+performance of the system is close to knowing the channel
+perfectly up to a velocity of about 150 km/h. With a further
+increase of the user velocity, the performance is decreasing.
+Figure 3 shows the MSE for the same scenario. Up to a
+certain user velocity of about v = 20 km/h, the MSE of the
+LS block fading estimator is lower than that of the LS fast
+fading estimator. This is because the block fading estimator
+inherently assumes that the channel stays constant during the
+transmission of one subframe and thus it performs averaging
+over time. At a user velocity of 25 km/h, the ALMMSE
+channel estimator shows a peak in the MSE which is due
+to numerical problems because of a small eigenvalue.
+Figure 4 shows the data throughput over SNR using differ-
+254
+Authorized licensed use limited to: International Institute of Information Technology Bangalore. Downloaded on November 09,2026 at 13:40:44 UTC from IEEE Xplore.  Restrictions apply. 
+
+--- PAGE 5 ---
+0
+5
+10
+15
+20
+25
+30
+0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+4.5
+5.0
+SNR [dB]
+Throughput [Mbit/s]
+ 
+ 
+PERFECT
+LMMSE
+ALMMSE
+LS
+LS block
+Fig. 4.
+Throughput of the LTE system using different channel estimators at
+user speed of 60 km/h.
+0
+5
+10
+15
+20
+25
+30
+10-4
+10-3
+10-2
+10-1
+100
+SNR [dB]
+MSE
+ 
+ 
+LMMSE
+ALMMSE
+LS
+LS block
+Fig. 5.
+Mean square error of the different channel estimators at user speed
+of 60 km/h
+ent channel estimators. At 90% of the maximum throughput,
+the performance loss of the ALMMSE estimator with respect
+to the LMMSE estimator is approximately 0.1 dB. We measure
+the the performance loss at 90% of the maximum throughput,
+because it is operating point, where the mobile operator would
+like to operate their systems. In the low SNR region, the
+LS block fading estimator slightly outperforms the LS fast
+fading estimator due its averaging over time, which effectively
+suppresses noise.
+Correspondingly, Figure 5 depicts the MSE of the pre-
+sented channel estimators for a user velocity of 60 km/h.
+With increasing SNR, the difference in MSE between the
+ALMMSE estimator and the LMMSE estimator, is decreasing.
+Furthermore, it can be observed that the MSE of the LS
+block fading estimator saturates. The MSE of all other channel
+estimators is decreasing with increasing SNR.
+0
+50
+100
+150
+200
+0
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+3.5
+4.0
+4.5
+5.0
+User speed [km/h]
+Throughput [Mbit/s]
+ 
+ 
+LS
+LMMSE
+Ntime=2 Nfreq=5
+Ntime=2 Nfreq=4
+Ntime=2 Nfreq=3
+Ntime=1 Nfreq=1
+Fig. 6.
+Throughput of the LTE system using ALMMSE channel estimator
+with different number of eigenvalues over user speed
+In Figure 6 the throughput as a function user velocity
+at SNR = 20 dB is depicted for the ALMMSE channel
+estimator using different Nfreq and Ntime. By varying the
+number of considered eigenvalues, the complexity of the
+ALMMSE channel estimator can be adjusted; however, also
+the achievable performance is affected. For the case Nfreq = 1
+and Ntime = 1, the performance is limited that much that
+no throughput is achieved. This is caused by ignoring large
+eigenvalues.
+Finally, in Figure 7 we present the throughput of LTE at
+SNR=30 dB using cqi=14 over user velocity. It can be seen,
+that with increasing user velocity the throughput is decreasing
+even with perfect channel knowledge. This is due to Inter
+Carrier Interference (ICI) that is not taken care of at the
+receiver. Under the user velocity axis, a Signal to Interference
+and Noise Ratio (SINR) axis is shown. It illustrate the decrease
+of the SINR with increasing user velocity, even though the
+SNR is constant. At an SNR of 20 dB, shown in Figure 2, there
+is no performance degradation with perfect channel knowledge
+with increasing velocity.
+VI. CONCLUSION
+In this paper, we proposed an ALMMSE channel esti-
+mator and compared it to several state-of-the-art fast fading
+channel estimators. Although the MSE performance of the
+LS fast fading estimator is only slightly decreasing with
+increasing user velocity, the throughput performance is af-
+fected more dramatically. The proposed ALMMSE channel
+estimator is able to outperform the LS estimator and achieves
+a throughput performance with only 0.1 dB loss compared to
+the LMMSE estimator. Furthermore, the complexity of the
+proposed scheme can be adjusted by varying the number of
+considered eigenvalues, however, at the cost of estimation
+accuracy and consequently data throughput.
+255
+Authorized licensed use limited to: International Institute of Information Technology Bangalore. Downloaded on November 09,2026 at 13:40:44 UTC from IEEE Xplore.  Restrictions apply. 
+
+--- PAGE 6 ---
+0
+50
+100
+150
+200
+250
+300
+350
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+User speed [km/h]
+Throughput [Mbit/s]
+ 
+ 
+PERFECT
+LMMSE
+ALMMSE
+LS
+LS block
+30
+29.7
+29.0
+28.0
+26.8
+25.7
+24.7
+23.7
+SINR [dB]
+Fig. 7.
+Throughput of the LTE system with cqi=14 using different channel
+estimators over user speed at SNR=30 dB
+ACKNOWLEDGMENT
+This work has been funded by the Christian Doppler Labo-
+ratory for Wireless Technologies for Sustainable Mobility, the
+Institute of Communications and Radio-Frequency Engineer-
+ing, KATHREIN-Werke KG, and mobilkom austria AG.
+REFERENCES
+[1] J. J. van de Beek, O. Edfors, M. Sandell, S. K. Wilson, and P. O.
+Borjesson, “On channel estimation in OFDM systems,” in Proc.
+IEEE 45th Vehicular Technology Conference (VTC 1995), 1995,
+vol. 2, pp. 815–819.
+[2] S. Coleri, M. Ergen, A. Puri, and A. Bahai, “Channel estimation
+techniques based on pilot arrangement in ofdm systems,” IEEE
+Transactions on Broadcasting, vol. 48, no. 3, pp. 223–229, Sep
+2002.
+[3] Ye Li, “Pilot-symbol-aided channel estimation for OFDM in
+wireless systems,”
+in 1999 IEEE 49th Vehicular Technology
+Conference, Jul 1999, vol. 2, pp. 1131–1135 vol.2.
+[4] Christian Mehlf¨uhrer, Sebastian Caban, and Markus Rupp,
+“An accurate and low complex channel estimator for OFDM
+WiMAX,” in Proc. Third International Symposium on Com-
+munications, Control, and Signal Processing (ISCCSP 2008),
+St. Julians, Malta, Mar. 2008, pp. 922–926.
+[5] S. Omar, A. Ancora, and D.T.M. Slock, “Performance analysis
+of general pilot-aided linear channel estimation in LTE OFDMA
+systems with application to simpliﬁed MMSE schemes,”
+in
+2008. PIMRC 2008. IEEE 19th International Symposium on
+Personal, Indoor and Mobile Radio Communications, Sept.
+2008, pp. 1–6.
+[6] Peter Hoeher, Stefan Kaiser, and Patrick Robertson,
+“Pilot-
+symbol-aided channel estimation in time and frequency,” in In
+Proc. IEEE Global Telecommunications Conference (GLOBE-
+COM 97), Communication Theory Mini-Conference, 1997, pp.
+90–96.
+[7] P. Fertl and G. Matz, “Efﬁcient OFDM channel estimation in
+mobile environments based on irregular sampling,” in Proc of.
+Fortieth Annual Asilomar Conference on Signals, Systems, and
+Computers, Paciﬁc Grove, CA, USA, October 2006.
+[8] Won-Gyu Song and Jong-Tae Lim, “Pilot-symbol aided channel
+estimation for ofdm with fast fading channels,” IEEE Transac-
+tions on Broadcasting, vol. 49, no. 4, pp. 398–402, Dec. 2003.
+[9] 3GPP, “Evolved Universal Terrestrial Radio Access (E-UTRA);
+Physical channels and modulation,” TS 36.211, 3rd Generation
+Partnership Project (3GPP), Sept. 2008.
+[10] T. K. Moon and W. C. Stirling, Mathematical Methods and
+Algorithms for Signal Processing, Prentice Hall, Upper Saddle
+River, NJ, 2000.
+[11] Moody T. Chu, Robert E. Funderlic, and Robert J. Plemmons,
+“Structured low rank approximation,” Linear Algebra and its
+Applications, vol. 366, pp. 157–172, 2003.
+[12] Christian Mehlf¨uhrer, Martin Wrulich, Josep Colom Ikuno,
+Dagmar Bosanska, and Markus Rupp, “Simulating the long term
+evolution physical layer,” in Proc. of the 17th European Signal
+Processing Conference (EUSIPCO 2009), Glasgow, Scotland,
+Aug. 2009.
+[13] ITU, “Recommendation ITU-R M.1225: Guidelines for evalua-
+tion of radio transmission technologies for IMT- 2000 systems,”
+Recommendation ITU-R M.1225, International Telecommuni-
+cation Union, 1998.
+[14] T. Zemen and C.F. Mecklenbr¨auker,
+“Time-variant channel
+estimation using discrete prolate spheroidal sequences,” IEEE
+Transactions on Signal Processing, vol. 53, no. 9, pp. 3597–
+3607, Sept. 2005.
+256
+Authorized licensed use limited to: International Institute of Information Technology Bangalore. Downloaded on November 09,2026 at 13:40:44 UTC from IEEE Xplore.  Restrictions apply. 
